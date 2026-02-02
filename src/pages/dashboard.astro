@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ReadingList from '../components/readings/ReadingList';
+---
+
+<BaseLayout title="Dashboard">
+  <ReadingList client:load />
+</BaseLayout>

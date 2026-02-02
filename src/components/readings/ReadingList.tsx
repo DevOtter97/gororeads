@@ -1,0 +1,395 @@
+import { useState, useEffect } from 'preact/hooks';
+import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
+import { readingRepository } from '../../infrastructure/firebase/FirestoreReadingRepository';
+import type { Reading, ReadingStatus, ReadingCategory, CreateReadingDTO, UpdateReadingDTO } from '../../domain/entities/Reading';
+import ReadingCard from './ReadingCard';
+import ReadingFilters from './ReadingFilters';
+import ReadingForm from './ReadingForm';
+
+export default function ReadingList() {
+    const [user, setUser] = useState(authService.getCurrentUser());
+    const [readings, setReadings] = useState<Reading[]>([]);
+    const [filteredReadings, setFilteredReadings] = useState<Reading[]>([]);
+    const [availableTags, setAvailableTags] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    // Filters
+    const [statusFilter, setStatusFilter] = useState<ReadingStatus | 'all'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<ReadingCategory | 'all'>('all');
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Modal
+    const [showModal, setShowModal] = useState(false);
+    const [editingReading, setEditingReading] = useState<Reading | undefined>(undefined);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+    // Auth listener
+    useEffect(() => {
+        const unsubscribe = authService.onAuthStateChanged((u) => {
+            setUser(u);
+            if (!u) {
+                window.location.href = '/';
+            }
+        });
+        return unsubscribe;
+    }, []);
+
+    // Load readings
+    useEffect(() => {
+        if (!user) return;
+
+        const loadReadings = async () => {
+            try {
+                setLoading(true);
+                const data = await readingRepository.getByUserId(user.id);
+                setReadings(data);
+
+                // Extract unique tags
+                const tags = new Set<string>();
+                data.forEach((r) => r.tags.forEach((t) => tags.add(t)));
+                setAvailableTags(Array.from(tags).sort());
+            } catch (err) {
+                setError('Error al cargar las lecturas');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadReadings();
+    }, [user]);
+
+    // Apply filters
+    useEffect(() => {
+        let result = [...readings];
+
+        if (statusFilter !== 'all') {
+            result = result.filter((r) => r.status === statusFilter);
+        }
+
+        if (categoryFilter !== 'all') {
+            result = result.filter((r) => r.category === categoryFilter);
+        }
+
+        if (selectedTags.length > 0) {
+            result = result.filter((r) =>
+                selectedTags.some((tag) => r.tags.includes(tag))
+            );
+        }
+
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter((r) =>
+                r.title.toLowerCase().includes(query)
+            );
+        }
+
+        setFilteredReadings(result);
+    }, [readings, statusFilter, categoryFilter, selectedTags, searchQuery]);
+
+    const handleCreate = async (data: CreateReadingDTO) => {
+        if (!user) {
+            console.error('No user found');
+            throw new Error('No user found');
+        }
+        console.log('Creating reading with data:', data);
+        console.log('User ID:', user.id);
+        try {
+            const newReading = await readingRepository.create(user.id, data);
+            console.log('Created reading:', newReading);
+            setReadings([newReading, ...readings]);
+            setShowModal(false);
+        } catch (err) {
+            console.error('Error creating reading:', err);
+            throw err;
+        }
+    };
+
+    const handleUpdate = async (data: CreateReadingDTO) => {
+        if (!editingReading) {
+            console.error('No editing reading found');
+            throw new Error('No editing reading');
+        }
+        console.log('Updating reading:', editingReading.id, 'with data:', data);
+        try {
+            const updated = await readingRepository.update(editingReading.id, data);
+            console.log('Updated reading:', updated);
+            setReadings(readings.map((r) => (r.id === updated.id ? updated : r)));
+            setShowModal(false);
+            setEditingReading(undefined);
+        } catch (err) {
+            console.error('Error updating reading:', err);
+            throw err;
+        }
+    };
+
+    const handleStatusChange = async (id: string, status: ReadingStatus) => {
+        try {
+            const readingToUpdate = readings.find((r) => r.id === id);
+
+            const updates: UpdateReadingDTO = { status };
+
+            // Auto-complete if status is completed and totals exist
+            if (status === 'completed' && readingToUpdate?.totalChapters) {
+                updates.currentChapter = readingToUpdate.totalChapters;
+                // If it was percentage, set to 100
+                if (readingToUpdate.measureUnit === 'percentage') {
+                    updates.currentChapter = 100;
+                }
+            } else if (status === 'completed' && readingToUpdate?.measureUnit === 'percentage') {
+                updates.currentChapter = 100;
+            }
+
+            const updated = await readingRepository.update(id, updates);
+            setReadings(readings.map((r) => (r.id === id ? updated : r)));
+        } catch (err) {
+            console.error('Error updating status:', err);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await readingRepository.delete(id);
+            setReadings(readings.filter((r) => r.id !== id));
+            setDeleteConfirm(null);
+        } catch (err) {
+            console.error('Error deleting reading:', err);
+        }
+    };
+
+    const handleEdit = (reading: Reading) => {
+        setEditingReading(reading);
+        setShowModal(true);
+    };
+
+    const handleTagToggle = (tag: string) => {
+        if (selectedTags.includes(tag)) {
+            setSelectedTags(selectedTags.filter((t) => t !== tag));
+        } else {
+            setSelectedTags([...selectedTags, tag]);
+        }
+    };
+
+    const handleClearFilters = () => {
+        setStatusFilter('all');
+        setCategoryFilter('all');
+        setSelectedTags([]);
+        setSearchQuery('');
+    };
+
+    const handleLogout = async () => {
+        await authService.logout();
+        window.location.href = '/';
+    };
+
+    if (loading) {
+        return (
+            <div class="loading-container">
+                <span class="spinner spinner-lg"></span>
+                <p>Cargando lecturas...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div class="reading-list-container">
+            {/* Header */}
+            <header class="header">
+                <div class="container header-inner">
+                    <div class="logo">
+                        <span class="logo-icon">📚</span>
+                        LeafList
+                    </div>
+                    <div class="header-actions">
+                        <span class="user-email">{user?.email}</span>
+                        <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main class="main">
+                <div class="container">
+                    <div class="page-header">
+                        <h1 class="page-title">Mis Lecturas</h1>
+                        <button
+                            class="btn btn-primary"
+                            onClick={() => {
+                                setEditingReading(undefined);
+                                setShowModal(true);
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Añadir Lectura
+                        </button>
+                    </div>
+
+                    <ReadingFilters
+                        currentStatus={statusFilter}
+                        currentCategory={categoryFilter}
+                        selectedTags={selectedTags}
+                        availableTags={availableTags}
+                        searchQuery={searchQuery}
+                        onStatusChange={setStatusFilter}
+                        onCategoryChange={setCategoryFilter}
+                        onTagToggle={handleTagToggle}
+                        onSearchChange={setSearchQuery}
+                        onClearFilters={handleClearFilters}
+                    />
+
+                    {error && (
+                        <div class="toast toast-error">
+                            {error}
+                            <button class="btn btn-ghost btn-sm" onClick={() => setError('')}>×</button>
+                        </div>
+                    )}
+
+                    {filteredReadings.length === 0 ? (
+                        <div class="empty-state">
+                            <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            </svg>
+                            <h2 class="empty-state-title">
+                                {readings.length === 0 ? 'No hay lecturas' : 'Sin resultados'}
+                            </h2>
+                            <p class="empty-state-text">
+                                {readings.length === 0
+                                    ? 'Añade tu primer manga, manhwa o novela para empezar'
+                                    : 'Intenta ajustar los filtros para ver más resultados'}
+                            </p>
+                            {readings.length === 0 && (
+                                <button
+                                    class="btn btn-primary"
+                                    onClick={() => setShowModal(true)}
+                                >
+                                    Añadir Primera Lectura
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div class="grid reading-grid">
+                            {filteredReadings.map((reading) => (
+                                <ReadingCard
+                                    key={reading.id}
+                                    reading={reading}
+                                    onEdit={handleEdit}
+                                    onDelete={(id) => setDeleteConfirm(id)}
+                                    onStatusChange={handleStatusChange}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            {/* Add/Edit Modal */}
+            {showModal && (
+                <div class="modal-overlay" onClick={(e) => {
+                    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                        setShowModal(false);
+                        setEditingReading(undefined);
+                    }
+                }}>
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h2 class="modal-title">
+                                {editingReading ? 'Editar Lectura' : 'Nueva Lectura'}
+                            </h2>
+                            <button
+                                class="modal-close"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEditingReading(undefined);
+                                }}
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <ReadingForm
+                                reading={editingReading}
+                                onSubmit={editingReading ? handleUpdate : handleCreate}
+                                onCancel={() => {
+                                    setShowModal(false);
+                                    setEditingReading(undefined);
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div class="modal-overlay" onClick={(e) => {
+                    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                        setDeleteConfirm(null);
+                    }
+                }}>
+                    <div class="modal" style="max-width: 400px;">
+                        <div class="modal-header">
+                            <h2 class="modal-title">Confirmar Eliminación</h2>
+                            <button class="modal-close" onClick={() => setDeleteConfirm(null)}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onClick={() => setDeleteConfirm(null)}>
+                                Cancelar
+                            </button>
+                            <button class="btn btn-danger" onClick={() => handleDelete(deleteConfirm)}>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 60vh;
+          gap: var(--space-4);
+          color: var(--text-secondary);
+        }
+
+        .spinner-lg {
+          width: 3rem;
+          height: 3rem;
+          border-width: 3px;
+        }
+
+        .user-email {
+          font-size: 0.875rem;
+          color: var(--text-secondary);
+        }
+
+        @media (max-width: 640px) {
+          .user-email {
+            display: none;
+          }
+        }
+      `}</style>
+        </div>
+    );
+}
