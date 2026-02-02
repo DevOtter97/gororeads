@@ -705,3 +705,31 @@ textarea {
         transform: translateX(0);
     }
 }
+
+/* User Setup Modal - Custom Implementation to avoid Tailwind issues */
+.user-setup-modal-overlay {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+}
+
+.user-setup-modal-card {
+    width: 100%;
+    max-width: 28rem;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+}

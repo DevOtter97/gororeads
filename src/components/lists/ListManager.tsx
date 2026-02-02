@@ -44,13 +44,16 @@ export default function ListManager() {
 
     const handleCreate = async (data: { name: string; description?: string; visibility: ListVisibility; readings?: ListReading[] }) => {
         if (!user) return;
-        const newList = await customListRepository.create(user.id, user.displayName || user.email, data);
+        // Use username first, then displayName, then fallback (though username should exist)
+        const userNameToUse = user.username || user.displayName || user.email;
+        const newList = await customListRepository.create(user.id, userNameToUse, data);
         setLists([newList, ...lists]);
     };
 
     const handleUpdate = async (data: { name: string; description?: string; visibility: ListVisibility; readings?: ListReading[] }) => {
-        if (!editingList) return;
-        const updated = await customListRepository.update(editingList.id, data);
+        if (!editingList || !user) return;
+        const userNameToUse = user.username || user.displayName || user.email;
+        const updated = await customListRepository.update(editingList.id, { ...data, userName: userNameToUse });
         setLists(lists.map(l => l.id === updated.id ? updated : l));
         setEditingList(undefined);
     };
@@ -97,7 +100,7 @@ export default function ListManager() {
                         <a href="/lists" class="nav-link active">Listas</a>
                     </nav>
                     <div class="header-actions">
-                        <span class="user-email">{user?.email}</span>
+                        <span class="user-email">{user?.username || user?.displayName || user?.email}</span>
                         <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
                             Cerrar Sesión
                         </button>

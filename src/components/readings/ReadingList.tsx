@@ -272,7 +272,7 @@ export default function ReadingList() {
                         <a href="/lists" class="nav-link">Listas</a>
                     </nav>
                     <div class="header-actions">
-                        <span class="user-email">{user?.email}</span>
+                        <span class="user-email">{user?.username || user?.displayName || user?.email}</span>
                         <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
                             Cerrar Sesión
                         </button>

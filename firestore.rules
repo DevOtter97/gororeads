@@ -31,6 +31,21 @@ service cloud.firestore {
         allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
       }
     }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Usernames collection (public read for uniqueness check and login)
+    // Usernames collection (public read for uniqueness check and login)
+    match /usernames/{username} {
+      allow read: if true;
+      // Allow create if user is reserving for themselves
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow delete if owner (e.g. strict cleanup, though app doesn't implement delete yet)
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
     
     // Default deny
     match /{document=**} {
