@@ -13,7 +13,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     const [imageUrl, setImageUrl] = useState(reading?.imageUrl || '');
     const [category, setCategory] = useState<ReadingCategory>(reading?.category || 'manga');
     const [status, setStatus] = useState<ReadingStatus>(reading?.status || 'to-read');
-    const [measureUnit, setMeasureUnit] = useState<ReadingMeasureUnit>(reading?.measureUnit || 'chapters');
+    const [measureUnit, setMeasureUnit] = useState<ReadingMeasureUnit>(reading?.measureUnit || 'pages');
     const [tags, setTags] = useState<string[]>(reading?.tags || []);
     const [newTag, setNewTag] = useState('');
     const [currentChapter, setCurrentChapter] = useState(reading?.currentChapter?.toString() || '');

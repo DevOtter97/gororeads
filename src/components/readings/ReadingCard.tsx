@@ -3,19 +3,22 @@ import { STATUS_LABELS, CATEGORY_LABELS } from '../../domain/entities/Reading';
 
 interface Props {
   reading: Reading;
+  onView: (reading: Reading) => void;
   onEdit: (reading: Reading) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: Reading['status']) => void;
+  onToggleFavorite: (id: string, isFavorite: boolean) => void;
 }
 
-export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange }: Props) {
+export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatusChange, onToggleFavorite }: Props) {
   const handleStatusChange = (e: Event) => {
+    e.stopPropagation();
     const newStatus = (e.target as HTMLSelectElement).value as Reading['status'];
     onStatusChange(reading.id, newStatus);
   };
 
   return (
-    <div class="card reading-card">
+    <div class="card reading-card" onClick={() => onView(reading)}>
       <div class="reading-card-image">
         {reading.imageUrl ? (
           <img src={reading.imageUrl} alt={reading.title} loading="lazy" />
@@ -46,6 +49,19 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
             </svg>
           </a>
         )}
+        <button
+          class={`reading-card-favorite ${reading.isFavorite ? 'is-favorite' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(reading.id, !reading.isFavorite);
+          }}
+          aria-label={reading.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          title={reading.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={reading.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
       </div>
 
       <div class="card-body">
@@ -56,13 +72,14 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
             class="status-select"
             value={reading.status}
             onChange={handleStatusChange}
+            onClick={(e) => e.stopPropagation()}
           >
             {Object.entries(STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
 
-          {reading.currentChapter !== undefined && (
+          {reading.status !== 'to-read' && reading.currentChapter !== undefined && (
             <span class="chapter-info">
               {reading.measureUnit === 'percentage'
                 ? `${reading.currentChapter}%`
@@ -88,7 +105,10 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
         <div class="reading-card-actions">
           <button
             class="btn btn-ghost btn-sm"
-            onClick={() => onEdit(reading)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(reading);
+            }}
             aria-label="Editar"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -99,7 +119,10 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
           </button>
           <button
             class="btn btn-ghost btn-sm"
-            onClick={() => onDelete(reading.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(reading.id);
+            }}
             aria-label="Eliminar"
             style="color: var(--status-dropped);"
           >
@@ -117,6 +140,13 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
           display: flex;
           flex-direction: column;
           height: 100%;
+          cursor: pointer;
+          transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .reading-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
         }
         
         .reading-card-image {
@@ -231,6 +261,40 @@ export default function ReadingCard({ reading, onEdit, onDelete, onStatusChange 
         
         .reading-card-actions .btn {
           flex: 1;
+        }
+
+        .reading-card-favorite {
+          position: absolute;
+          bottom: var(--space-2);
+          right: var(--space-2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
+          color: var(--text-secondary);
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          z-index: 10;
+        }
+
+        .reading-card-favorite:hover {
+          background: rgba(0, 0, 0, 0.8);
+          color: #ef4444;
+          transform: scale(1.1);
+        }
+
+        .reading-card-favorite.is-favorite {
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.2);
+        }
+
+        .reading-card-favorite.is-favorite:hover {
+          background: rgba(239, 68, 68, 0.3);
         }
       `}</style>
     </div>

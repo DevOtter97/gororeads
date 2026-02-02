@@ -31,6 +31,7 @@ function toReading(id: string, data: Record<string, unknown>): Reading {
         totalChapters: data.totalChapters as number | undefined,
         notes: data.notes as string | undefined,
         referenceUrl: data.referenceUrl as string | undefined,
+        isFavorite: (data.isFavorite as boolean) ?? false,
         startedAt: (data.startedAt as Timestamp)?.toDate() || undefined,
         finishedAt: (data.finishedAt as Timestamp)?.toDate() || undefined,
         createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
@@ -55,6 +56,7 @@ export class FirestoreReadingRepository implements IReadingRepository {
             totalChapters: data.totalChapters ?? null,
             notes: data.notes ?? null,
             referenceUrl: data.referenceUrl ?? null,
+            isFavorite: data.isFavorite ?? false,
             startedAt: data.startedAt ? Timestamp.fromDate(data.startedAt) : null,
             finishedAt: data.finishedAt ? Timestamp.fromDate(data.finishedAt) : null,
             createdAt: now,
@@ -84,6 +86,7 @@ export class FirestoreReadingRepository implements IReadingRepository {
         if (data.totalChapters !== undefined) updateData.totalChapters = data.totalChapters ?? null;
         if (data.notes !== undefined) updateData.notes = data.notes ?? null;
         if (data.referenceUrl !== undefined) updateData.referenceUrl = data.referenceUrl ?? null;
+        if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
 
         if (data.startedAt !== undefined) {
             updateData.startedAt = data.startedAt ? Timestamp.fromDate(data.startedAt) : null;
@@ -120,23 +123,34 @@ export class FirestoreReadingRepository implements IReadingRepository {
     }
 
     async getByUserId(userId: string, filters?: ReadingFilters): Promise<Reading[]> {
+        console.log('[Firestore] Starting getByUserId for user:', userId);
+        console.time('[Firestore] Total getByUserId');
+
+        console.time('[Firestore] Building query');
         let q = query(
             this.collectionRef,
-            where('userId', '==', userId),
-            orderBy('updatedAt', 'desc')
+            where('userId', '==', userId)
         );
 
         if (filters?.status) {
             q = query(
                 this.collectionRef,
                 where('userId', '==', userId),
-                where('status', '==', filters.status),
-                orderBy('updatedAt', 'desc')
+                where('status', '==', filters.status)
             );
         }
+        console.timeEnd('[Firestore] Building query');
 
+        console.time('[Firestore] getDocs execution');
         const querySnapshot = await getDocs(q);
+        console.timeEnd('[Firestore] getDocs execution');
+        console.log('[Firestore] Documents retrieved:', querySnapshot.docs.length);
+
+        console.time('[Firestore] Processing results');
         let readings = querySnapshot.docs.map((doc) => toReading(doc.id, doc.data()));
+
+        // Client-side sorting to avoid composite index requirement
+        readings.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
         // Client-side filtering for complex filters
         if (filters?.category) {
@@ -155,7 +169,9 @@ export class FirestoreReadingRepository implements IReadingRepository {
                 r.title.toLowerCase().includes(search)
             );
         }
+        console.timeEnd('[Firestore] Processing results');
 
+        console.timeEnd('[Firestore] Total getByUserId');
         return readings;
     }
 

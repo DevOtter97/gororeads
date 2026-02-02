@@ -5,6 +5,8 @@ import type { Reading, ReadingStatus, ReadingCategory, CreateReadingDTO, UpdateR
 import ReadingCard from './ReadingCard';
 import ReadingFilters from './ReadingFilters';
 import ReadingForm from './ReadingForm';
+import ReadingDetailsModal from './ReadingDetailsModal';
+import StartReadingModal from './StartReadingModal';
 
 export default function ReadingList() {
     const [user, setUser] = useState(authService.getCurrentUser());
@@ -19,10 +21,13 @@ export default function ReadingList() {
     const [categoryFilter, setCategoryFilter] = useState<ReadingCategory | 'all'>('all');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [favoritesFilter, setFavoritesFilter] = useState(false);
 
     // Modal
     const [showModal, setShowModal] = useState(false);
+    const [viewingReading, setViewingReading] = useState<Reading | undefined>(undefined);
     const [editingReading, setEditingReading] = useState<Reading | undefined>(undefined);
+    const [startingReading, setStartingReading] = useState<Reading | undefined>(undefined);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
     // Auth listener
@@ -86,19 +91,20 @@ export default function ReadingList() {
             );
         }
 
+        if (favoritesFilter) {
+            result = result.filter((r) => r.isFavorite);
+        }
+
         setFilteredReadings(result);
-    }, [readings, statusFilter, categoryFilter, selectedTags, searchQuery]);
+    }, [readings, statusFilter, categoryFilter, selectedTags, searchQuery, favoritesFilter]);
 
     const handleCreate = async (data: CreateReadingDTO) => {
         if (!user) {
             console.error('No user found');
             throw new Error('No user found');
         }
-        console.log('Creating reading with data:', data);
-        console.log('User ID:', user.id);
         try {
             const newReading = await readingRepository.create(user.id, data);
-            console.log('Created reading:', newReading);
             setReadings([newReading, ...readings]);
             setShowModal(false);
         } catch (err) {
@@ -112,10 +118,8 @@ export default function ReadingList() {
             console.error('No editing reading found');
             throw new Error('No editing reading');
         }
-        console.log('Updating reading:', editingReading.id, 'with data:', data);
         try {
             const updated = await readingRepository.update(editingReading.id, data);
-            console.log('Updated reading:', updated);
             setReadings(readings.map((r) => (r.id === updated.id ? updated : r)));
             setShowModal(false);
             setEditingReading(undefined);
@@ -129,23 +133,60 @@ export default function ReadingList() {
         try {
             const readingToUpdate = readings.find((r) => r.id === id);
 
+            // Intercept 'reading' status change
+            if (status === 'reading' && readingToUpdate) {
+                setStartingReading(readingToUpdate);
+                return;
+            }
+
             const updates: UpdateReadingDTO = { status };
 
             // Auto-complete if status is completed and totals exist
-            if (status === 'completed' && readingToUpdate?.totalChapters) {
-                updates.currentChapter = readingToUpdate.totalChapters;
+            if (status === 'completed') {
+                updates.finishedAt = new Date();
+
+                if (readingToUpdate?.totalChapters) {
+                    updates.currentChapter = readingToUpdate.totalChapters;
+                }
+
                 // If it was percentage, set to 100
-                if (readingToUpdate.measureUnit === 'percentage') {
+                if (readingToUpdate?.measureUnit === 'percentage') {
                     updates.currentChapter = 100;
                 }
-            } else if (status === 'completed' && readingToUpdate?.measureUnit === 'percentage') {
-                updates.currentChapter = 100;
             }
 
             const updated = await readingRepository.update(id, updates);
             setReadings(readings.map((r) => (r.id === id ? updated : r)));
         } catch (err) {
             console.error('Error updating status:', err);
+        }
+    };
+
+    const handleToggleFavorite = async (id: string, isFavorite: boolean) => {
+        try {
+            const updated = await readingRepository.update(id, { isFavorite });
+            setReadings(readings.map((r) => (r.id === id ? updated : r)));
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+        }
+    };
+
+    const handleStartReadingConfirm = async (data: { startedAt: Date; currentChapter: number; measureUnit: ReadingMeasureUnit }) => {
+        if (!startingReading) return;
+
+        try {
+            const updates: UpdateReadingDTO = {
+                status: 'reading',
+                startedAt: data.startedAt,
+                currentChapter: data.currentChapter,
+                measureUnit: data.measureUnit
+            };
+
+            const updated = await readingRepository.update(startingReading.id, updates);
+            setReadings(readings.map((r) => (r.id === startingReading.id ? updated : r)));
+            setStartingReading(undefined);
+        } catch (err) {
+            console.error('Error starting reading:', err);
         }
     };
 
@@ -160,8 +201,13 @@ export default function ReadingList() {
     };
 
     const handleEdit = (reading: Reading) => {
+        setViewingReading(undefined);
         setEditingReading(reading);
         setShowModal(true);
+    };
+
+    const handleView = (reading: Reading) => {
+        setViewingReading(reading);
     };
 
     const handleTagToggle = (tag: string) => {
@@ -177,6 +223,7 @@ export default function ReadingList() {
         setCategoryFilter('all');
         setSelectedTags([]);
         setSearchQuery('');
+        setFavoritesFilter(false);
     };
 
     const handleLogout = async () => {
@@ -200,7 +247,7 @@ export default function ReadingList() {
                 <div class="container header-inner">
                     <div class="logo">
                         <span class="logo-icon">📚</span>
-                        LeafList
+                        gororeads
                     </div>
                     <div class="header-actions">
                         <span class="user-email">{user?.email}</span>
@@ -237,10 +284,12 @@ export default function ReadingList() {
                         selectedTags={selectedTags}
                         availableTags={availableTags}
                         searchQuery={searchQuery}
+                        showFavoritesOnly={favoritesFilter}
                         onStatusChange={setStatusFilter}
                         onCategoryChange={setCategoryFilter}
                         onTagToggle={handleTagToggle}
                         onSearchChange={setSearchQuery}
+                        onFavoritesToggle={() => setFavoritesFilter(!favoritesFilter)}
                         onClearFilters={handleClearFilters}
                     />
 
@@ -280,9 +329,11 @@ export default function ReadingList() {
                                 <ReadingCard
                                     key={reading.id}
                                     reading={reading}
+                                    onView={handleView}
                                     onEdit={handleEdit}
                                     onDelete={(id) => setDeleteConfirm(id)}
                                     onStatusChange={handleStatusChange}
+                                    onToggleFavorite={handleToggleFavorite}
                                 />
                             ))}
                         </div>
@@ -328,6 +379,24 @@ export default function ReadingList() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* View Details Modal */}
+            {viewingReading && (
+                <ReadingDetailsModal
+                    reading={viewingReading}
+                    onClose={() => setViewingReading(undefined)}
+                    onEdit={handleEdit}
+                />
+            )}
+
+            {/* Start Reading Modal */}
+            {startingReading && (
+                <StartReadingModal
+                    reading={startingReading}
+                    onConfirm={handleStartReadingConfirm}
+                    onCancel={() => setStartingReading(undefined)}
+                />
             )}
 
             {/* Delete Confirmation Modal */}

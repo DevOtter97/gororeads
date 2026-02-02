@@ -233,6 +233,9 @@ textarea {
 
 .card-body {
     padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 /* Badge */
