@@ -233,10 +233,28 @@ export default function ReadingList() {
 
     if (loading) {
         return (
-            <div class="loading-container">
-                <span class="spinner spinner-lg"></span>
-                <p>Cargando lecturas...</p>
-            </div>
+            <>
+                <div class="loading-container">
+                    <span class="spinner spinner-lg"></span>
+                    <p>Cargando lecturas...</p>
+                </div>
+                <style>{`
+                    .loading-container {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        gap: var(--space-4);
+                        color: var(--text-secondary);
+                    }
+                    .spinner-lg {
+                        width: 3rem;
+                        height: 3rem;
+                        border-width: 3px;
+                    }
+                `}</style>
+            </>
         );
     }
 
@@ -249,6 +267,10 @@ export default function ReadingList() {
                         <span class="logo-icon">📚</span>
                         gororeads
                     </div>
+                    <nav class="nav-links">
+                        <a href="/dashboard" class="nav-link active">Lecturas</a>
+                        <a href="/lists" class="nav-link">Listas</a>
+                    </nav>
                     <div class="header-actions">
                         <span class="user-email">{user?.email}</span>
                         <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
@@ -437,7 +459,7 @@ export default function ReadingList() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          min-height: 60vh;
+          height: 100vh;
           gap: var(--space-4);
           color: var(--text-secondary);
         }
@@ -451,6 +473,23 @@ export default function ReadingList() {
         .user-email {
           font-size: 0.875rem;
           color: var(--text-secondary);
+        }
+
+        .nav-links {
+          display: flex;
+          gap: var(--space-4);
+        }
+
+        .nav-link {
+          color: var(--text-secondary);
+          text-decoration: none;
+          font-weight: 500;
+          transition: color var(--transition-fast);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+          color: var(--accent-primary);
         }
 
         @media (max-width: 640px) {

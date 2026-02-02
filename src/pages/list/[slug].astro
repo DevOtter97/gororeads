@@ -1,0 +1,9 @@
+---
+export const prerender = false; // Enable SSR for dynamic list pages
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PublicListView from "../../components/lists/PublicListView";
+---
+
+<BaseLayout title="Lista Compartida">
+    <PublicListView client:load slug={Astro.params.slug ?? ""} />
+</BaseLayout>

@@ -2,13 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Readings - only owner can access
     match /readings/{readingId} {
-      // Allow read/write only if the user is authenticated and the data belongs to them
       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      // For creating, check if the incoming data userId matches the auth uid
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      // For updating/deleting, check if the existing resource userId matches the auth uid
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Custom Lists
+    match /customLists/{listId} {
+      // Public/Link or Owner access
+      allow read: if resource.data.visibility != 'private' || (request.auth != null && resource.data.userId == request.auth.uid);
+      // Create requires auth and matching userId
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Update/delete only by owner
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Likes subcollection - auth required
+      match /likes/{likeId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+      
+      // Comments subcollection - auth required to write
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      }
     }
     
     // Default deny
