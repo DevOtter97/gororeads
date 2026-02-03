@@ -48,8 +48,8 @@ export default function SocialHub() {
 
                 {/* Content */}
                 <div class="mt-6 min-h-[400px]">
-                    {activeTab === 'friends' && <FriendList />}
-                    {activeTab === 'requests' && <FriendRequestList />}
+                    {activeTab === 'friends' && user && <FriendList userId={user.id} />}
+                    {activeTab === 'requests' && user && <FriendRequestList userId={user.id} />}
                     {activeTab === 'search' && <UserSearch />}
                 </div>
             </div>

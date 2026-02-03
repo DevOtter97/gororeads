@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { FriendRequest } from '../../domain/interfaces/IFriendRepository';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 
-export default function FriendRequestList() {
+interface Props {
+    userId: string;
+}
+
+export default function FriendRequestList({ userId }: Props) {
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadRequests();
-    }, []);
+        if (!userId) return;
 
-    const loadRequests = async () => {
-        const user = authService.getCurrentUser();
-        if (!user) return;
-        try {
-            const data = await friendRepository.getPendingRequests(user.id);
-            setRequests(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        const loadRequests = async () => {
+            try {
+                const data = await friendRepository.getPendingRequests(userId);
+                setRequests(data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadRequests();
+    }, [userId]);
 
     const handleRespond = async (requestId: string, status: 'accepted' | 'rejected') => {
         try {
