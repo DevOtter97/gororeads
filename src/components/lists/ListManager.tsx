@@ -5,6 +5,7 @@ import { authService } from '../../infrastructure/firebase';
 import type { User } from '../../domain/entities/User';
 import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
+import Header from '../Header';
 
 export default function ListManager() {
     const [user, setUser] = useState<User | null>(null);
@@ -89,24 +90,7 @@ export default function ListManager() {
 
     return (
         <div class="list-manager-container">
-            <header class="header">
-                <div class="container header-inner">
-                    <div class="logo">
-                        <span class="logo-icon">📚</span>
-                        gororeads
-                    </div>
-                    <nav class="nav-links">
-                        <a href="/dashboard" class="nav-link">Lecturas</a>
-                        <a href="/lists" class="nav-link active">Listas</a>
-                    </nav>
-                    <div class="header-actions">
-                        <span class="user-email">{user?.username || user?.displayName || user?.email}</span>
-                        <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
-                            Cerrar Sesión
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header user={user} activeTab="lists" />
 
             <main class="container main-content">
                 <div class="page-header">
