@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import type { User } from '../../domain/entities/User';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
+import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 
 export default function UserSearch() {
     const [query, setQuery] = useState('');
@@ -44,29 +45,15 @@ export default function UserSearch() {
             const currentUser = authService.getCurrentUser();
             if (!currentUser) return;
 
-            // Ideally we should pass the full current User object if we have it, 
-            // but authService.getCurrentUser() returns User | null (from checking auth state? 
-            // wait, authService usually returns Firebase User, we might need to map it or fetch full profile).
-            // For now let's assume we can cast or fetch.
-            // Actually FirestoreFriendRepository expects a domain User object for 'fromUser'.
-            // Let's assume we have it or construct a basic one from Auth.
+            // Get full user profile from Firestore to have the correct username
+            const fullProfile = await userRepository.getUserProfile(currentUser.id);
+            if (!fullProfile) {
+                setError('Error: No se pudo obtener tu perfil.');
+                return;
+            }
 
-            // Temporary fix: Construct basic User from auth details. 
-            // In a real app we should use a Context to get the full profile.
-            const fromUser: User = {
-                id: currentUser.id,
-                email: currentUser.email || '',
-                username: currentUser.displayName || 'Usuario', // Fallback, implies we rely on auth profile
-                displayName: currentUser.displayName,
-                photoURL: currentUser.photoURL || undefined,
-                createdAt: new Date(),
-                isProfileComplete: true
-            };
-
-            await friendRepository.sendFriendRequest(fromUser, targetUser.id);
+            await friendRepository.sendFriendRequest(fullProfile, targetUser.id);
             setSuccessMsg(`Solicitud enviada a ${targetUser.username}`);
-            // Remove from list or show sent status?
-            // For simplicity just show message.
         } catch (err: any) {
             console.error(err);
             if (err.message.includes('Friendship status')) {
