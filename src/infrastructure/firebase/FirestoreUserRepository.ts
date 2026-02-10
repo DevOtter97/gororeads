@@ -66,6 +66,7 @@ export const userRepository = {
             email: data.email,
             username: data.username,
             displayName: data.displayName,
+            photoURL: data.photoURL || undefined,
             createdAt: data.createdAt.toDate(),
             isProfileComplete: true
         };

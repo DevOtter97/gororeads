@@ -19,10 +19,13 @@ export class FirestoreNotificationRepository implements INotificationRepository 
 
     async createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): Promise<void> {
         const notificationsRef = collection(db, 'notifications');
-        await addDoc(notificationsRef, {
-            ...notification,
-            createdAt: serverTimestamp()
-        });
+        const data: Record<string, any> = { createdAt: serverTimestamp() };
+        for (const [key, value] of Object.entries(notification)) {
+            if (value !== undefined) {
+                data[key] = value;
+            }
+        }
+        await addDoc(notificationsRef, data);
     }
 
     async getNotifications(userId: string, limitCount: number = 20): Promise<Notification[]> {
