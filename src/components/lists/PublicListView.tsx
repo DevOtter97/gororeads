@@ -2,7 +2,8 @@ import { useState, useEffect } from 'preact/hooks';
 import type { CustomList, ListComment, ListReading } from '../../domain/entities/CustomList';
 import type { Reading } from '../../domain/entities/Reading';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
-import { authService } from '../../infrastructure/firebase';
+import { authService } from '../../infrastructure/firebase'; // Keep existing import
+import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository'; // Import userRepository
 import type { User } from '../../domain/entities/User';
 import { CATEGORY_LABELS, STATUS_LABELS } from '../../domain/entities/Reading';
 
@@ -20,6 +21,7 @@ export default function PublicListView({ slug }: Props) {
     const [hasLiked, setHasLiked] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
+    const [ownerName, setOwnerName] = useState<string>(''); // State for owner name
 
     const [authInitializing, setAuthInitializing] = useState(true);
 
@@ -74,6 +76,26 @@ export default function PublicListView({ slug }: Props) {
         }
     };
 
+
+
+    // Fetch owner name when list is loaded
+    useEffect(() => {
+        const fetchOwnerName = async () => {
+            if (!list) return;
+            // Default to list.userName
+            setOwnerName(list.userName);
+            try {
+                const owner = await userRepository.getUserProfile(list.userId);
+                if (owner && (owner.displayName || owner.username)) {
+                    setOwnerName(owner.displayName || owner.username);
+                }
+            } catch (err) {
+                console.error('Error fetching list owner:', err);
+            }
+        };
+        fetchOwnerName();
+    }, [list]);
+
     const checkIfLiked = async () => {
         if (!list || !user) return;
         const liked = await customListRepository.hasUserLiked(list.id, user.id);
@@ -98,7 +120,7 @@ export default function PublicListView({ slug }: Props) {
             const comment = await customListRepository.addComment(
                 list.id,
                 user.id,
-                user.displayName || user.email,
+                user.username || user.displayName || user.email,
                 { content: newComment.trim() }
             );
             setComments([comment, ...comments]);
@@ -154,7 +176,7 @@ export default function PublicListView({ slug }: Props) {
                         <h1>{list.name}</h1>
                         {list.description && <p class="list-description">{list.description}</p>}
                         <div class="list-meta">
-                            <span>Por {list.userName}</span>
+                            <span>Por {ownerName}</span>
                             <span>•</span>
                             <span>{list.readings.length} lecturas</span>
                         </div>
@@ -250,7 +272,11 @@ export default function PublicListView({ slug }: Props) {
                         {comments.map(comment => (
                             <div key={comment.id} class="comment">
                                 <div class="comment-header">
-                                    <span class="comment-author">{comment.userName}</span>
+                                    <span class="comment-author">
+                                        {(user && comment.userId === user.id)
+                                            ? (user.displayName || user.username || user.email)
+                                            : comment.userName}
+                                    </span>
                                     <span class="comment-date">
                                         {new Date(comment.createdAt).toLocaleDateString('es-ES')}
                                     </span>

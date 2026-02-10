@@ -31,6 +31,44 @@ service cloud.firestore {
         allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
       }
     }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Friends subcollection
+      match /friends/{friendId} {
+        allow read: if request.auth != null;
+        // Allow write if user is owner of the profile OR the friend being added (for reciprocal adds)
+        allow write: if request.auth != null && (request.auth.uid == userId || request.auth.uid == friendId);
+      }
+    }
+
+    // Friend Requests
+    match /friend_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
+      allow read: if request.auth != null && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow update: if request.auth != null && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow delete: if request.auth != null && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Usernames collection (public read for uniqueness check and login)
+    match /usernames/{username} {
+      allow read: if true;
+      // Allow create if user is reserving for themselves
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow delete if owner (e.g. strict cleanup, though app doesn't implement delete yet)
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
     
     // Default deny
     match /{document=**} {

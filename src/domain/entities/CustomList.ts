@@ -35,6 +35,7 @@ export interface CreateCustomListDTO {
 
 export interface UpdateCustomListDTO {
     name?: string;
+    userName?: string;
     description?: string;
     visibility?: ListVisibility;
     coverImage?: string;

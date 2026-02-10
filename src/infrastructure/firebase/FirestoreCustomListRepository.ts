@@ -107,6 +107,7 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
         };
 
         if (data.name !== undefined) updateData.name = data.name;
+        if (data.userName !== undefined) updateData.userName = data.userName;
         if (data.description !== undefined) updateData.description = data.description ?? null;
         if (data.visibility !== undefined) updateData.visibility = data.visibility;
         if (data.coverImage !== undefined) updateData.coverImage = data.coverImage ?? null;

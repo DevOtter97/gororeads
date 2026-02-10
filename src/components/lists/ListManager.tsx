@@ -5,6 +5,7 @@ import { authService } from '../../infrastructure/firebase';
 import type { User } from '../../domain/entities/User';
 import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
+import Header from '../Header';
 
 export default function ListManager() {
     const [user, setUser] = useState<User | null>(null);
@@ -44,13 +45,16 @@ export default function ListManager() {
 
     const handleCreate = async (data: { name: string; description?: string; visibility: ListVisibility; readings?: ListReading[] }) => {
         if (!user) return;
-        const newList = await customListRepository.create(user.id, user.displayName || user.email, data);
+        // Use username first, then displayName, then fallback (though username should exist)
+        const userNameToUse = user.username || user.displayName || user.email;
+        const newList = await customListRepository.create(user.id, userNameToUse, data);
         setLists([newList, ...lists]);
     };
 
     const handleUpdate = async (data: { name: string; description?: string; visibility: ListVisibility; readings?: ListReading[] }) => {
-        if (!editingList) return;
-        const updated = await customListRepository.update(editingList.id, data);
+        if (!editingList || !user) return;
+        const userNameToUse = user.username || user.displayName || user.email;
+        const updated = await customListRepository.update(editingList.id, { ...data, userName: userNameToUse });
         setLists(lists.map(l => l.id === updated.id ? updated : l));
         setEditingList(undefined);
     };
@@ -86,24 +90,7 @@ export default function ListManager() {
 
     return (
         <div class="list-manager-container">
-            <header class="header">
-                <div class="container header-inner">
-                    <div class="logo">
-                        <span class="logo-icon">📚</span>
-                        gororeads
-                    </div>
-                    <nav class="nav-links">
-                        <a href="/dashboard" class="nav-link">Lecturas</a>
-                        <a href="/lists" class="nav-link active">Listas</a>
-                    </nav>
-                    <div class="header-actions">
-                        <span class="user-email">{user?.email}</span>
-                        <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
-                            Cerrar Sesión
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header user={user} activeTab="lists" />
 
             <main class="container main-content">
                 <div class="page-header">

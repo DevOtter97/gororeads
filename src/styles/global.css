@@ -296,8 +296,67 @@ textarea {
 }
 
 .badge-category-light-novel {
-    background: var(--category-light-novel);
-    color: white;
+
+    /* Loading Spinner */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8);
+        gap: var(--space-4);
+        color: var(--text-secondary);
+    }
+
+    .spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 3px solid var(--bg-secondary);
+        border-top-color: var(--accent-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-lg {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: var(--space-12) var(--space-4);
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-state-icon {
+        margin-bottom: var(--space-4);
+        opacity: 0.5;
+        color: var(--text-muted);
+    }
+
+    .empty-state-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+    }
+
+    .empty-state-text {
+        max-width: 400px;
+        margin: 0 auto var(--space-6);
+        color: var(--text-secondary);
+    }
 }
 
 .badge-category-webtoon {
@@ -704,4 +763,32 @@ textarea {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* User Setup Modal - Custom Implementation to avoid Tailwind issues */
+.user-setup-modal-overlay {
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+}
+
+.user-setup-modal-card {
+    width: 100%;
+    max-width: 28rem;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
 }

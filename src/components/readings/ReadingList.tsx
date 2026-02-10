@@ -7,6 +7,7 @@ import ReadingFilters from './ReadingFilters';
 import ReadingForm from './ReadingForm';
 import ReadingDetailsModal from './ReadingDetailsModal';
 import StartReadingModal from './StartReadingModal';
+import Header from '../Header';
 
 export default function ReadingList() {
     const [user, setUser] = useState(authService.getCurrentUser());
@@ -261,27 +262,10 @@ export default function ReadingList() {
     return (
         <div class="reading-list-container">
             {/* Header */}
-            <header class="header">
-                <div class="container header-inner">
-                    <div class="logo">
-                        <span class="logo-icon">📚</span>
-                        gororeads
-                    </div>
-                    <nav class="nav-links">
-                        <a href="/dashboard" class="nav-link active">Lecturas</a>
-                        <a href="/lists" class="nav-link">Listas</a>
-                    </nav>
-                    <div class="header-actions">
-                        <span class="user-email">{user?.email}</span>
-                        <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
-                            Cerrar Sesión
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header user={user} activeTab="dashboard" />
 
             {/* Main Content */}
-            <main class="main">
+            < main class="main" >
                 <div class="container">
                     <div class="page-header">
                         <h1 class="page-title">Mis Lecturas</h1>
@@ -361,97 +345,105 @@ export default function ReadingList() {
                         </div>
                     )}
                 </div>
-            </main>
+            </main >
 
             {/* Add/Edit Modal */}
-            {showModal && (
-                <div class="modal-overlay" onClick={(e) => {
-                    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                        setShowModal(false);
-                        setEditingReading(undefined);
-                    }
-                }}>
-                    <div class="modal">
-                        <div class="modal-header">
-                            <h2 class="modal-title">
-                                {editingReading ? 'Editar Lectura' : 'Nueva Lectura'}
-                            </h2>
-                            <button
-                                class="modal-close"
-                                onClick={() => {
-                                    setShowModal(false);
-                                    setEditingReading(undefined);
-                                }}
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <ReadingForm
-                                reading={editingReading}
-                                onSubmit={editingReading ? handleUpdate : handleCreate}
-                                onCancel={() => {
-                                    setShowModal(false);
-                                    setEditingReading(undefined);
-                                }}
-                            />
+            {
+                showModal && (
+                    <div class="modal-overlay" onClick={(e) => {
+                        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                            setShowModal(false);
+                            setEditingReading(undefined);
+                        }
+                    }}>
+                        <div class="modal">
+                            <div class="modal-header">
+                                <h2 class="modal-title">
+                                    {editingReading ? 'Editar Lectura' : 'Nueva Lectura'}
+                                </h2>
+                                <button
+                                    class="modal-close"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setEditingReading(undefined);
+                                    }}
+                                >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <ReadingForm
+                                    reading={editingReading}
+                                    onSubmit={editingReading ? handleUpdate : handleCreate}
+                                    onCancel={() => {
+                                        setShowModal(false);
+                                        setEditingReading(undefined);
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* View Details Modal */}
-            {viewingReading && (
-                <ReadingDetailsModal
-                    reading={viewingReading}
-                    onClose={() => setViewingReading(undefined)}
-                    onEdit={handleEdit}
-                />
-            )}
+            {
+                viewingReading && (
+                    <ReadingDetailsModal
+                        reading={viewingReading}
+                        onClose={() => setViewingReading(undefined)}
+                        onEdit={handleEdit}
+                    />
+                )
+            }
 
             {/* Start Reading Modal */}
-            {startingReading && (
-                <StartReadingModal
-                    reading={startingReading}
-                    onConfirm={handleStartReadingConfirm}
-                    onCancel={() => setStartingReading(undefined)}
-                />
-            )}
+            {
+                startingReading && (
+                    <StartReadingModal
+                        reading={startingReading}
+                        onConfirm={handleStartReadingConfirm}
+                        onCancel={() => setStartingReading(undefined)}
+                    />
+                )
+            }
 
             {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div class="modal-overlay" onClick={(e) => {
-                    if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                        setDeleteConfirm(null);
-                    }
-                }}>
-                    <div class="modal" style="max-width: 400px;">
-                        <div class="modal-header">
-                            <h2 class="modal-title">Confirmar Eliminación</h2>
-                            <button class="modal-close" onClick={() => setDeleteConfirm(null)}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <p>¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" onClick={() => setDeleteConfirm(null)}>
-                                Cancelar
-                            </button>
-                            <button class="btn btn-danger" onClick={() => handleDelete(deleteConfirm)}>
-                                Eliminar
-                            </button>
+            {
+                deleteConfirm && (
+                    <div class="modal-overlay" onClick={(e) => {
+                        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                            setDeleteConfirm(null);
+                        }
+                    }}>
+                        <div class="modal" style="max-width: 400px;">
+                            <div class="modal-header">
+                                <h2 class="modal-title">Confirmar Eliminación</h2>
+                                <button class="modal-close" onClick={() => setDeleteConfirm(null)}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onClick={() => setDeleteConfirm(null)}>
+                                    Cancelar
+                                </button>
+                                <button class="btn btn-danger" onClick={() => handleDelete(deleteConfirm)}>
+                                    Eliminar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style>{`
         .loading-container {
@@ -498,6 +490,6 @@ export default function ReadingList() {
           }
         }
       `}</style>
-        </div>
+        </div >
     );
 }

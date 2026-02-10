@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SocialHub from "../components/social/SocialHub";
+import { authService } from "../infrastructure/firebase/FirebaseAuthService";
+
+// We can add server-side checks here if needed, or rely on client-side auth state + layout redirect
+---
+
+<BaseLayout title="Comunidad | Leaflist">
+    <SocialHub client:load />
+</BaseLayout>

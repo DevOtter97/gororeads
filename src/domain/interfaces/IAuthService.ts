@@ -1,7 +1,8 @@
 import type { User } from '../entities/User';
 
 export interface AuthCredentials {
-    email: string;
+    email: string; // Can be email or username for login
+    username?: string; // Required for registration
     password: string;
 }
 
