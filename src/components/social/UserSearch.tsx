@@ -67,8 +67,11 @@ export default function UserSearch() {
                     fromUserPhotoUrl: fullProfile.photoURL,
                     read: false
                 });
-            } catch (notifErr) {
+            } catch (notifErr: any) {
                 console.error('Error creating notification:', notifErr);
+                if (notifErr?.code === 'permission-denied') {
+                    console.error('Permission denied when creating notification. Check Firestore rules.');
+                }
             }
         } catch (err: any) {
             console.error(err);

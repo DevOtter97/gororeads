@@ -37,22 +37,30 @@ export class FirestoreNotificationRepository implements INotificationRepository 
             firestoreLimit(limitCount)
         );
 
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                userId: data.userId,
-                type: data.type,
-                title: data.title,
-                message: data.message,
-                fromUserId: data.fromUserId,
-                fromUsername: data.fromUsername,
-                fromUserPhotoUrl: data.fromUserPhotoUrl,
-                read: data.read,
-                createdAt: data.createdAt?.toDate() || new Date()
-            };
-        });
+        try {
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    userId: data.userId,
+                    type: data.type,
+                    title: data.title,
+                    message: data.message,
+                    fromUserId: data.fromUserId,
+                    fromUsername: data.fromUsername,
+                    fromUserPhotoUrl: data.fromUserPhotoUrl,
+                    read: data.read,
+                    createdAt: data.createdAt?.toDate() || new Date()
+                };
+            });
+        } catch (error: any) {
+            console.error('Error fetching notifications:', error);
+            if (error?.code === 'failed-precondition') {
+                console.error('Likely missing Firestore index. Check the link in the error message above.');
+            }
+            throw error;
+        }
     }
 
     async getUnreadCount(userId: string): Promise<number> {

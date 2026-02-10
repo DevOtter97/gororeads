@@ -18,6 +18,14 @@ export default function SocialHub() {
                 window.location.href = '/';
             }
         });
+
+        // Check for tab query param
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam === 'requests' || tabParam === 'friends' || tabParam === 'search') {
+            setActiveTab(tabParam);
+        }
+
         return unsubscribe;
     }, []);
 

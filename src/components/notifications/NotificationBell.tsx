@@ -64,6 +64,16 @@ export default function NotificationBell({ userId }: Props) {
         }
     };
 
+    const handleNotificationClick = async (notification: Notification) => {
+        if (!notification.read) {
+            await handleMarkAsRead(notification.id);
+        }
+
+        if (notification.type === 'friend_request_received' || notification.type === 'friend_request_accepted') {
+            window.location.href = '/social?tab=requests';
+        }
+    };
+
     const handleMarkAsRead = async (notificationId: string) => {
         try {
             await notificationRepository.markAsRead(notificationId);
@@ -121,7 +131,7 @@ export default function NotificationBell({ userId }: Props) {
                                 <div
                                     key={n.id}
                                     class={`notification-item ${!n.read ? 'unread' : ''}`}
-                                    onClick={() => !n.read && handleMarkAsRead(n.id)}
+                                    onClick={() => handleNotificationClick(n)}
                                 >
                                     <div class="notification-item-avatar">
                                         {n.fromUserPhotoUrl ? (
