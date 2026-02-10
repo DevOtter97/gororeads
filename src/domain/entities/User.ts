@@ -4,6 +4,8 @@ export interface User {
     username: string;
     displayName?: string;
     photoURL?: string;
+    age?: number;
+    country?: string;
     createdAt: Date;
     isProfileComplete?: boolean;
 }

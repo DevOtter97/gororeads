@@ -3,6 +3,7 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     query,
     where,
     getDocs,
@@ -32,13 +33,15 @@ export const userRepository = {
 
     async createUserProfile(user: User): Promise<void> {
         const userRef = doc(db, USERS_COLLECTION, user.id);
-        await setDoc(userRef, {
+        const data: Record<string, any> = {
             email: user.email,
             username: user.username,
             displayName: user.displayName || user.username,
             createdAt: Timestamp.fromDate(user.createdAt),
             updatedAt: Timestamp.now()
-        });
+        };
+        if (user.photoURL) data.photoURL = user.photoURL;
+        await setDoc(userRef, data);
     },
 
     async getEmailByUsername(username: string): Promise<string | null> {
@@ -67,8 +70,20 @@ export const userRepository = {
             username: data.username,
             displayName: data.displayName,
             photoURL: data.photoURL || undefined,
+            age: data.age || undefined,
+            country: data.country || undefined,
             createdAt: data.createdAt.toDate(),
             isProfileComplete: true
         };
+    },
+
+    async updateUserProfile(userId: string, data: Partial<Pick<User, 'displayName' | 'photoURL' | 'age' | 'country'>>): Promise<void> {
+        const userRef = doc(db, USERS_COLLECTION, userId);
+        const updateData: Record<string, any> = { updatedAt: Timestamp.now() };
+        if (data.displayName !== undefined) updateData.displayName = data.displayName;
+        if (data.photoURL !== undefined) updateData.photoURL = data.photoURL;
+        if (data.age !== undefined) updateData.age = data.age;
+        if (data.country !== undefined) updateData.country = data.country;
+        await updateDoc(userRef, updateData);
     }
 };
