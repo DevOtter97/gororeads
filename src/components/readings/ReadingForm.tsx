@@ -78,7 +78,6 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
                 startedAt: startedAt ? new Date(startedAt) : undefined,
                 finishedAt: finishedAt ? new Date(finishedAt) : undefined,
             };
-            console.log('Form submitting data:', dataToSubmit);
             await onSubmit(dataToSubmit);
         } catch (err: unknown) {
             console.error('Form error:', err);

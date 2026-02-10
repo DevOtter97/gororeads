@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -29,5 +30,9 @@ console.timeEnd('[Firebase] getAuth');
 console.time('[Firebase] getFirestore');
 export const db = getFirestore(app);
 console.timeEnd('[Firebase] getFirestore');
+
+console.time('[Firebase] getStorage');
+export const storage = getStorage(app);
+console.timeEnd('[Firebase] getStorage');
 
 console.log('[Firebase] Initialization complete');
