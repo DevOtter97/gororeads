@@ -3,6 +3,7 @@ import type { User } from '../../domain/entities/User';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
+import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 
 export default function UserSearch() {
     const [query, setQuery] = useState('');
@@ -54,6 +55,21 @@ export default function UserSearch() {
 
             await friendRepository.sendFriendRequest(fullProfile, targetUser.id);
             setSuccessMsg(`Solicitud enviada a ${targetUser.username}`);
+
+            try {
+                await notificationRepository.createNotification({
+                    userId: targetUser.id,
+                    type: 'friend_request_received',
+                    title: 'Nueva solicitud de amistad',
+                    message: `${fullProfile.username} te envio una solicitud de amistad`,
+                    fromUserId: fullProfile.id,
+                    fromUsername: fullProfile.username,
+                    fromUserPhotoUrl: fullProfile.photoURL,
+                    read: false
+                });
+            } catch (notifErr) {
+                console.error('Error creating notification:', notifErr);
+            }
         } catch (err: any) {
             console.error(err);
             if (err.message.includes('Friendship status')) {

@@ -1,7 +1,7 @@
 export interface Notification {
     id: string;
     userId: string;
-    type: 'friend_request_accepted';
+    type: 'friend_request_received' | 'friend_request_accepted';
     title: string;
     message: string;
     fromUserId: string;
