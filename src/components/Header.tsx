@@ -1,4 +1,5 @@
 import { authService } from '../infrastructure/firebase/FirebaseAuthService';
+import NotificationBell from './notifications/NotificationBell';
 
 interface HeaderProps {
     user: any; // Using any for simplicity as User type might differ slightly in usage, but ideally User
@@ -24,6 +25,7 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     <a href="/social" class={`nav-link ${activeTab === 'social' ? 'active' : ''}`}>Comunidad</a>
                 </nav>
                 <div class="header-actions">
+                    {user && <NotificationBell userId={user.id} />}
                     <span class="user-email">{user?.username || user?.displayName || user?.email}</span>
                     <button class="btn btn-ghost btn-sm" onClick={handleLogout}>
                         Cerrar Sesión

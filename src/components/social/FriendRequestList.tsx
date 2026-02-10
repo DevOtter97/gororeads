@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { FriendRequest } from '../../domain/interfaces/IFriendRepository';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
+import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
+import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 
 interface Props {
     userId: string;
+    onRequestHandled?: () => void;
 }
 
-export default function FriendRequestList({ userId }: Props) {
+export default function FriendRequestList({ userId, onRequestHandled }: Props) {
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -29,9 +32,30 @@ export default function FriendRequestList({ userId }: Props) {
 
     const handleRespond = async (requestId: string, status: 'accepted' | 'rejected') => {
         try {
+            const request = requests.find(r => r.id === requestId);
             await friendRepository.respondToRequest(requestId, status);
-            // Remove from list
             setRequests(prev => prev.filter(r => r.id !== requestId));
+            onRequestHandled?.();
+
+            if (status === 'accepted' && request) {
+                try {
+                    const currentUser = await userRepository.getUserProfile(userId);
+                    if (currentUser) {
+                        await notificationRepository.createNotification({
+                            userId: request.fromUserId,
+                            type: 'friend_request_accepted',
+                            title: 'Solicitud aceptada',
+                            message: `${currentUser.username} acepto tu solicitud de amistad`,
+                            fromUserId: userId,
+                            fromUsername: currentUser.username,
+                            fromUserPhotoUrl: currentUser.photoURL,
+                            read: false
+                        });
+                    }
+                } catch (notifErr) {
+                    console.error('Error creating notification:', notifErr);
+                }
+            }
         } catch (err) {
             console.error('Error responding to request:', err);
             alert('Error al procesar la solicitud');
