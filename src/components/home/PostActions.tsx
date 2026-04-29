@@ -144,19 +144,6 @@ export default function PostActions({
         <>
             <div class="post-actions">
                 <button
-                    class={`post-action ${liked ? 'liked' : ''}`}
-                    onClick={handleLike}
-                    disabled={working}
-                    aria-pressed={liked}
-                    aria-label={liked ? 'Quitar like' : 'Dar like'}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    {likesCount > 0 && <span class="post-action-count">{likesCount}</span>}
-                </button>
-
-                <button
                     class={`post-action ${commentsExpanded ? 'active' : ''}`}
                     onClick={onCommentToggle}
                     aria-expanded={commentsExpanded}
@@ -183,6 +170,19 @@ export default function PostActions({
                         <path d="M21 13v2a4 4 0 0 1-4 4H3" />
                     </svg>
                     {repostsCount > 0 && <span class="post-action-count">{repostsCount}</span>}
+                </button>
+
+                <button
+                    class={`post-action ${liked ? 'liked' : ''}`}
+                    onClick={handleLike}
+                    disabled={working}
+                    aria-pressed={liked}
+                    aria-label={liked ? 'Quitar like' : 'Dar like'}
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    {likesCount > 0 && <span class="post-action-count">{likesCount}</span>}
                 </button>
             </div>
             <style>{`

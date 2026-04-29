@@ -32,7 +32,10 @@ export interface IPostRepository {
     getLikedPostIds(postIds: string[], userId: string): Promise<Set<string>>;
 
     // --- Comments ---
-    addComment(postId: string, author: User, text: string): Promise<PostComment>;
+    /**
+     * @param parentId Si se proporciona, el comment es una respuesta al comment con ese id.
+     */
+    addComment(postId: string, author: User, text: string, parentId?: string): Promise<PostComment>;
     getComments(postId: string): Promise<PostComment[]>;
     deleteComment(postId: string, commentId: string): Promise<void>;
 
