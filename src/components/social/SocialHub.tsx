@@ -43,7 +43,7 @@ export default function SocialHub() {
     const tabs = [
         { id: 'friends', label: 'Mis Amigos' },
         { id: 'requests', label: 'Solicitudes' },
-        { id: 'search', label: 'Buscar Personas' }
+        { id: 'search', label: 'Buscar Usuarios' }
     ] as const;
 
     return (
@@ -72,7 +72,7 @@ export default function SocialHub() {
 
                 {/* Content */}
                 <div class="mt-6 min-h-[400px]">
-                    {activeTab === 'friends' && user && <FriendList userId={user.id} />}
+                    {activeTab === 'friends' && user && <FriendList userId={user.id} onSwitchToSearch={() => setActiveTab('search')} />}
                     {activeTab === 'requests' && user && <FriendRequestList userId={user.id} onRequestHandled={handleRequestHandled} />}
                     {activeTab === 'search' && <UserSearch />}
                 </div>

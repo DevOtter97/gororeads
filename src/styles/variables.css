@@ -23,6 +23,10 @@
   --status-completed: #3b82f6;
   --status-dropped: #ef4444;
   --status-on-hold: #f59e0b;
+
+  /* Semantic action colors */
+  --status-success: #10b981;
+  --status-danger: #ef4444;
   
   /* Category Colors */
   --category-manga: #ec4899;

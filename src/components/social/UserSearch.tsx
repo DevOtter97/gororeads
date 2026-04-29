@@ -4,6 +4,7 @@ import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendR
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
+import UserAvatar from '../UserAvatar';
 
 export default function UserSearch() {
     const [query, setQuery] = useState('');
@@ -11,6 +12,8 @@ export default function UserSearch() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [sentTo, setSentTo] = useState<Set<string>>(new Set());
+    const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
 
     const handleSearch = async (e: Event) => {
         e.preventDefault();
@@ -26,9 +29,22 @@ export default function UserSearch() {
             const currentUser = authService.getCurrentUser();
             if (!currentUser) throw new Error('No autenticado');
 
-            const users = await friendRepository.searchUsers(query, currentUser.id);
-            setResults(users);
-            if (users.length === 0) {
+            // Search + friends list en paralelo: la lista de amigos nos permite
+            // distinguir resultados que ya son amigos sin hacer N queries extra.
+            const [users, friends] = await Promise.all([
+                friendRepository.searchUsers(query, currentUser.id),
+                friendRepository.getFriends(currentUser.id),
+            ]);
+            setFriendIds(new Set(friends.map(f => f.userId)));
+
+            // Doble filtro defensivo: excluye tanto por id como por username (usernames
+            // son unicos asi que cualquiera de los dos detecta al usuario actual,
+            // incluso si la sesion auth esta mid-resolution en Safari).
+            const filtered = users.filter(u =>
+                u.id !== currentUser.id && u.username.toLowerCase() !== currentUser.username?.toLowerCase()
+            );
+            setResults(filtered);
+            if (filtered.length === 0) {
                 setError('No se encontraron usuarios con ese nombre.');
             }
         } catch (err) {
@@ -46,7 +62,6 @@ export default function UserSearch() {
             const currentUser = authService.getCurrentUser();
             if (!currentUser) return;
 
-            // Get full user profile from Firestore to have the correct username
             const fullProfile = await userRepository.getUserProfile(currentUser.id);
             if (!fullProfile) {
                 setError('Error: No se pudo obtener tu perfil.');
@@ -54,6 +69,7 @@ export default function UserSearch() {
             }
 
             await friendRepository.sendFriendRequest(fullProfile, targetUser.id);
+            setSentTo(prev => new Set(prev).add(targetUser.id));
             setSuccessMsg(`Solicitud enviada a ${targetUser.username}`);
 
             try {
@@ -69,13 +85,10 @@ export default function UserSearch() {
                 });
             } catch (notifErr: any) {
                 console.error('Error creating notification:', notifErr);
-                if (notifErr?.code === 'permission-denied') {
-                    console.error('Permission denied when creating notification. Check Firestore rules.');
-                }
             }
         } catch (err: any) {
             console.error(err);
-            if (err.message.includes('Friendship status')) {
+            if (err.message?.includes('Friendship status')) {
                 setError('Ya tienes una solicitud pendiente o son amigos.');
             } else {
                 setError('Error al enviar solicitud.');
@@ -84,67 +97,194 @@ export default function UserSearch() {
     };
 
     return (
-        <div class="card p-6">
-            <h3 class="text-xl font-bold mb-4">Buscar Personas</h3>
-            <form onSubmit={handleSearch} class="flex gap-3 mb-6">
-                <div class="relative flex-1">
-                    <input
-                        type="text"
-                        value={query}
-                        onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
-                        placeholder="Buscar por nombre de usuario..."
-                        class="form-input w-full pl-10"
-                    />
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.35-4.35"></path>
+        <>
+            <div class="search-card">
+                <h3 class="search-title">Buscar Usuarios</h3>
+
+                <form onSubmit={handleSearch} class="search-form">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
                         </svg>
+                        <input
+                            type="text"
+                            value={query}
+                            onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
+                            placeholder="Buscar por nombre de usuario..."
+                            class="form-input search-input"
+                        />
                     </div>
-                </div>
-                <button type="submit" class="btn btn-primary" disabled={loading}>
-                    {loading ? (
-                        <div class="spinner w-4 h-4 border-2"></div>
-                    ) : (
-                        'Buscar'
-                    )}
-                </button>
-            </form>
+                    <button type="submit" class="btn btn-primary" disabled={loading}>
+                        {loading ? <span class="spinner" /> : 'Buscar'}
+                    </button>
+                </form>
 
-            {error && <p class="text-red-500 mb-4">{error}</p>}
-            {successMsg && <p class="text-green-500 mb-4">{successMsg}</p>}
+                {error && <p class="search-msg search-msg--error">{error}</p>}
+                {successMsg && <p class="search-msg search-msg--success">{successMsg}</p>}
 
-            <div class="space-y-4">
-                {results.map(user => (
-                    <div key={user.id} class="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-[var(--accent-primary)] flex items-center justify-center text-white font-bold overflow-hidden">
-                                {user.photoURL ? (
-                                    <img src={user.photoURL} alt={user.username} class="w-full h-full object-cover" />
-                                ) : (
-                                    user.username.charAt(0).toUpperCase()
-                                )}
-                            </div>
-                            <div>
-                                <p class="font-medium text-[var(--text-primary)]">{user.username}</p>
-                                {/* <p class="text-sm text-[var(--text-muted)]">{user.displayName}</p> */}
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => handleAddFriend(user)}
-                            class="btn btn-sm btn-secondary hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)]"
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" class="mr-1">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="8.5" cy="7" r="4" />
-                                <line x1="20" y1="8" x2="20" y2="14" />
-                                <line x1="23" y1="11" x2="17" y2="11" />
-                            </svg>
-                            Añadir
-                        </button>
-                    </div>
-                ))}
+                {results.length > 0 && (
+                    <ul class="results-list">
+                        {results.map(user => {
+                            const isFriend = friendIds.has(user.id);
+                            const alreadySent = sentTo.has(user.id);
+                            return (
+                                <li key={user.id} class="result-row">
+                                    <a href={`/profile/${user.username}`} class="result-info">
+                                        <UserAvatar username={user.username} photoUrl={user.photoURL} />
+                                        <p class="result-name">{user.username}</p>
+                                    </a>
+                                    {isFriend ? (
+                                        <a href={`/profile/${user.username}`} class="btn btn-sm btn-friends" title="Ver perfil">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            Amigos
+                                        </a>
+                                    ) : alreadySent ? (
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                            Enviada
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => handleAddFriend(user)} class="btn btn-sm btn-secondary">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                                <circle cx="8.5" cy="7" r="4" />
+                                                <line x1="20" y1="8" x2="20" y2="14" />
+                                                <line x1="23" y1="11" x2="17" y2="11" />
+                                            </svg>
+                                            Añadir
+                                        </button>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </div>
-        </div>
+
+            <style>{`
+                .search-card {
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius-lg);
+                    padding: var(--space-6);
+                }
+
+                .search-title {
+                    font-size: 1.125rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin: 0 0 var(--space-4);
+                }
+
+                .search-form {
+                    display: flex;
+                    gap: var(--space-3);
+                    margin-bottom: var(--space-5);
+                }
+
+                .search-input-wrapper {
+                    position: relative;
+                    flex: 1;
+                }
+
+                .search-icon {
+                    position: absolute;
+                    left: var(--space-3);
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: var(--text-muted);
+                    pointer-events: none;
+                }
+
+                .search-input {
+                    width: 100%;
+                    padding-left: calc(var(--space-3) * 2 + 18px);
+                }
+
+                .search-msg {
+                    margin: 0 0 var(--space-4);
+                    padding: var(--space-3) var(--space-4);
+                    border-radius: var(--border-radius-md);
+                    font-size: 0.875rem;
+                }
+
+                .search-msg--error {
+                    background: rgba(239, 68, 68, 0.1);
+                    color: var(--status-danger);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                }
+
+                .search-msg--success {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: var(--status-success);
+                    border: 1px solid rgba(16, 185, 129, 0.2);
+                }
+
+                .results-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: var(--space-3);
+                }
+
+                .result-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: var(--space-3);
+                    padding: var(--space-3) var(--space-4);
+                    background: var(--bg-secondary);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius-md);
+                    transition: border-color var(--transition-fast);
+                }
+                .result-row:hover {
+                    border-color: var(--accent-primary);
+                }
+
+                .result-info {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-3);
+                    text-decoration: none;
+                    color: inherit;
+                    min-width: 0;
+                    flex: 1;
+                }
+
+                .result-name {
+                    font-weight: 500;
+                    color: var(--text-primary);
+                    margin: 0;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .btn-friends {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: var(--status-success);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    text-decoration: none;
+                }
+                .btn-friends:hover {
+                    background: rgba(16, 185, 129, 0.18);
+                    border-color: var(--status-success);
+                }
+
+                @media (max-width: 480px) {
+                    .search-form {
+                        flex-direction: column;
+                    }
+                }
+            `}</style>
+        </>
     );
 }

@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PublicUserProfile from "../../components/profile/PublicUserProfile";
+---
+
+<BaseLayout title="Perfil">
+    <PublicUserProfile client:load username={Astro.params.username ?? ""} />
+</BaseLayout>

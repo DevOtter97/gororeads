@@ -55,6 +55,15 @@ export const userRepository = {
         return usernameSnap.data().email as string;
     },
 
+    async getUserByUsername(username: string): Promise<User | null> {
+        // Resuelve username -> userId via la coleccion de reservas y luego trae el perfil
+        const usernameRef = doc(db, USERNAMES_COLLECTION, username.toLowerCase());
+        const usernameSnap = await getDoc(usernameRef);
+        if (!usernameSnap.exists()) return null;
+        const userId = usernameSnap.data().userId as string;
+        return this.getUserProfile(userId);
+    },
+
     async getUserProfile(userId: string): Promise<User | null> {
         const userRef = doc(db, USERS_COLLECTION, userId);
         const userSnap = await getDoc(userRef);

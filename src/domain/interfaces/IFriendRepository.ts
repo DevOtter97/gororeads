@@ -23,5 +23,6 @@ export interface IFriendRepository {
     getPendingRequests(userId: string): Promise<FriendRequest[]>;
     respondToRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<void>;
     getFriends(userId: string): Promise<Friend[]>;
+    removeFriend(currentUserId: string, friendUserId: string): Promise<void>;
     checkFriendshipStatus(currentUserId: string, targetUserId: string): Promise<'none' | 'pending_sent' | 'pending_received' | 'friends'>;
 }

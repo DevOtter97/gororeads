@@ -177,6 +177,19 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
         return snapshot.docs.map(doc => toCustomList(doc.id, doc.data()));
     }
 
+    async getPublicListsByUserId(userId: string): Promise<CustomList[]> {
+        // Listas no privadas de un usuario concreto, ordenadas por mas recientes
+        const q = query(
+            this.collectionRef,
+            where('userId', '==', userId),
+            where('visibility', 'in', ['public', 'link'])
+        );
+        const snapshot = await getDocs(q);
+        const lists = snapshot.docs.map(doc => toCustomList(doc.id, doc.data()));
+        lists.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        return lists;
+    }
+
     async getPublicLists(): Promise<CustomList[]> {
         const q = query(
             this.collectionRef,
