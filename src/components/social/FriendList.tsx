@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { Friend } from '../../domain/interfaces/IFriendRepository';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
+import LoadingState from '../LoadingState';
 
 interface Props {
     userId: string;
@@ -28,12 +29,7 @@ export default function FriendList({ userId }: Props) {
     }, [userId]);
 
     if (loading) {
-        return (
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Cargando amigos...</p>
-            </div>
-        );
+        return <LoadingState message="Cargando amigos..." fullScreen={false} />;
     }
 
     if (friends.length === 0) {

@@ -8,6 +8,7 @@ import ReadingForm from './ReadingForm';
 import ReadingDetailsModal from './ReadingDetailsModal';
 import StartReadingModal from './StartReadingModal';
 import Header from '../Header';
+import LoadingState from '../LoadingState';
 
 export default function ReadingList() {
     const [user, setUser] = useState(authService.getCurrentUser());
@@ -233,30 +234,7 @@ export default function ReadingList() {
     };
 
     if (loading) {
-        return (
-            <>
-                <div class="loading-container">
-                    <span class="spinner spinner-lg"></span>
-                    <p>Cargando lecturas...</p>
-                </div>
-                <style>{`
-                    .loading-container {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        height: 100vh;
-                        gap: var(--space-4);
-                        color: var(--text-secondary);
-                    }
-                    .spinner-lg {
-                        width: 3rem;
-                        height: 3rem;
-                        border-width: 3px;
-                    }
-                `}</style>
-            </>
-        );
+        return <LoadingState message="Cargando lecturas..." />;
     }
 
     return (
@@ -446,22 +424,6 @@ export default function ReadingList() {
             }
 
             <style>{`
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          gap: var(--space-4);
-          color: var(--text-secondary);
-        }
-
-        .spinner-lg {
-          width: 3rem;
-          height: 3rem;
-          border-width: 3px;
-        }
-
         .user-email {
           font-size: 0.875rem;
           color: var(--text-secondary);

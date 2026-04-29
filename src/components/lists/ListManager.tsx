@@ -6,6 +6,7 @@ import type { User } from '../../domain/entities/User';
 import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
 import Header from '../Header';
+import LoadingState from '../LoadingState';
 
 export default function ListManager() {
     const [user, setUser] = useState<User | null>(null);
@@ -80,12 +81,7 @@ export default function ListManager() {
     };
 
     if (loading) {
-        return (
-            <div class="loading-container">
-                <span class="spinner spinner-lg"></span>
-                <p>Cargando listas...</p>
-            </div>
-        );
+        return <LoadingState message="Cargando listas..." />;
     }
 
     return (
@@ -286,15 +282,6 @@ export default function ListManager() {
 
                 .btn-danger:hover {
                     opacity: 0.9;
-                }
-
-                .loading-container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    gap: var(--space-4);
                 }
             `}</style>
         </div>

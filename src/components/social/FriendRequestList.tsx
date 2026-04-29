@@ -3,6 +3,7 @@ import type { FriendRequest } from '../../domain/interfaces/IFriendRepository';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
+import LoadingState from '../LoadingState';
 
 interface Props {
     userId: string;
@@ -66,12 +67,7 @@ export default function FriendRequestList({ userId, onRequestHandled }: Props) {
     };
 
     if (loading) {
-        return (
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Cargando solicitudes...</p>
-            </div>
-        );
+        return <LoadingState message="Cargando solicitudes..." fullScreen={false} />;
     }
 
     if (requests.length === 0) {

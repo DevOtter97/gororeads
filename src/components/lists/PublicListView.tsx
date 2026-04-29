@@ -6,6 +6,7 @@ import { authService } from '../../infrastructure/firebase'; // Keep existing im
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository'; // Import userRepository
 import type { User } from '../../domain/entities/User';
 import { CATEGORY_LABELS, STATUS_LABELS } from '../../domain/entities/Reading';
+import LoadingState from '../LoadingState';
 
 interface Props {
     slug: string;
@@ -137,12 +138,7 @@ export default function PublicListView({ slug }: Props) {
     };
 
     if (loading || authInitializing) {
-        return (
-            <div class="loading-container">
-                <span class="spinner spinner-lg"></span>
-                <p>Cargando lista...</p>
-            </div>
-        );
+        return <LoadingState message="Cargando lista..." />;
     }
 
     if (error) {
@@ -473,7 +469,6 @@ export default function PublicListView({ slug }: Props) {
                     line-height: 1.6;
                 }
 
-                .loading-container,
                 .error-container {
                     display: flex;
                     flex-direction: column;
