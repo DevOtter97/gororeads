@@ -178,11 +178,13 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
     }
 
     async getPublicListsByUserId(userId: string): Promise<CustomList[]> {
-        // Listas no privadas de un usuario concreto, ordenadas por mas recientes
+        // Solo listas verdaderamente publicas. Las listas con visibilidad 'link' son
+        // privadas para todos excepto para quien tiene el enlace, asi que no deben
+        // listarse en el perfil publico de otro usuario.
         const q = query(
             this.collectionRef,
             where('userId', '==', userId),
-            where('visibility', 'in', ['public', 'link'])
+            where('visibility', '==', 'public')
         );
         const snapshot = await getDocs(q);
         const lists = snapshot.docs.map(doc => toCustomList(doc.id, doc.data()));
