@@ -44,7 +44,7 @@ export default function LoginForm({ onSuccess }: Props) {
         if (onSuccess) {
             onSuccess();
         } else {
-            window.location.href = '/dashboard';
+            window.location.href = '/';
         }
     };
 

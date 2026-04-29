@@ -3,7 +3,7 @@ import NotificationBell from './notifications/NotificationBell';
 
 interface HeaderProps {
     user: any;
-    activeTab: 'dashboard' | 'lists' | 'social';
+    activeTab: 'home' | 'dashboard' | 'lists' | 'social';
 }
 
 export default function Header({ user, activeTab }: HeaderProps) {
@@ -20,6 +20,7 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     gororeads
                 </div>
                 <nav class="nav-links">
+                    <a href="/" class={`nav-link ${activeTab === 'home' ? 'active' : ''}`}>Inicio</a>
                     <a href="/dashboard" class={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}>Lecturas</a>
                     <a href="/lists" class={`nav-link ${activeTab === 'lists' ? 'active' : ''}`}>Listas</a>
                     <a href="/social" class={`nav-link ${activeTab === 'social' ? 'active' : ''}`}>Comunidad</a>

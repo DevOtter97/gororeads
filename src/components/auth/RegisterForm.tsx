@@ -46,7 +46,7 @@ export default function RegisterForm({ onSuccess }: Props) {
         if (onSuccess) {
             onSuccess();
         } else {
-            window.location.href = '/dashboard';
+            window.location.href = '/';
         }
     };
 

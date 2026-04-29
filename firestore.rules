@@ -70,6 +70,21 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
+    // Posts (Home feed)
+    match /posts/{postId} {
+      // Read: el autor o un amigo del autor (existe en su subcoleccion friends).
+      allow read: if request.auth != null && (
+        resource.data.authorId == request.auth.uid ||
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(resource.data.authorId))
+      );
+      // Create: solo si el autor es el usuario autenticado.
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      // Delete: solo el autor.
+      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+      // Update: por ahora solo permitido al autor (para futuros counters via transactions).
+      allow update: if request.auth != null && resource.data.authorId == request.auth.uid;
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
