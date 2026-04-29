@@ -10,6 +10,7 @@ export interface ICustomListRepository {
     getById(id: string): Promise<CustomList | null>;
     getBySlug(slug: string): Promise<CustomList | null>;
     getByUserId(userId: string): Promise<CustomList[]>;
+    getPublicListsByUserId(userId: string): Promise<CustomList[]>;
     getPublicLists(): Promise<CustomList[]>;
 
     // Readings management

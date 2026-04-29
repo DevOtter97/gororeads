@@ -10,6 +10,7 @@ import {
     serverTimestamp,
     Timestamp,
     runTransaction,
+    writeBatch,
     limit,
     orderBy,
     startAt,
@@ -147,6 +148,14 @@ export class FirestoreFriendRepository implements IFriendRepository {
                 transaction.update(requestRef, { status: 'accepted' });
             });
         }
+    }
+
+    async removeFriend(currentUserId: string, friendUserId: string): Promise<void> {
+        // Borra ambas entradas reciprocas en una sola operacion atomica
+        const batch = writeBatch(db);
+        batch.delete(doc(db, `users/${currentUserId}/friends/${friendUserId}`));
+        batch.delete(doc(db, `users/${friendUserId}/friends/${currentUserId}`));
+        await batch.commit();
     }
 
     async getFriends(userId: string): Promise<Friend[]> {

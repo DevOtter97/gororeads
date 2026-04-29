@@ -4,6 +4,7 @@ import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendR
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import LoadingState from '../LoadingState';
+import UserAvatar from '../UserAvatar';
 
 interface Props {
     userId: string;
@@ -53,11 +54,8 @@ export default function FriendRequestList({ userId, onRequestHandled }: Props) {
                             read: false
                         });
                     }
-                } catch (notifErr: any) {
+                } catch (notifErr) {
                     console.error('Error creating notification:', notifErr);
-                    if (notifErr?.code === 'permission-denied') {
-                        console.error('Permission denied when creating notification. Check Firestore rules.');
-                    }
                 }
             }
         } catch (err) {
@@ -74,10 +72,10 @@ export default function FriendRequestList({ userId, onRequestHandled }: Props) {
         return (
             <div class="empty-state">
                 <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="8.5" cy="7" r="4"></circle>
-                    <line x1="20" y1="8" x2="20" y2="14"></line>
-                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <line x1="20" y1="8" x2="20" y2="14" />
+                    <line x1="23" y1="11" x2="17" y2="11" />
                 </svg>
                 <h3 class="empty-state-title">No hay solicitudes</h3>
                 <p class="empty-state-text">Te avisaremos cuando alguien quiera conectar contigo.</p>
@@ -86,42 +84,123 @@ export default function FriendRequestList({ userId, onRequestHandled }: Props) {
     }
 
     return (
-        <div class="grid gap-4">
-            {requests.map(req => (
-                <div key={req.id} class="card p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-[var(--accent-primary)] flex items-center justify-center text-white font-bold overflow-hidden">
-                            {req.fromUserPhotoUrl ? (
-                                <img src={req.fromUserPhotoUrl} alt={req.fromUsername} class="w-full h-full object-cover" />
-                            ) : (
-                                req.fromUsername.charAt(0).toUpperCase()
-                            )}
+        <>
+            <ul class="requests-list">
+                {requests.map(req => (
+                    <li key={req.id} class="request-card">
+                        <a href={`/profile/${req.fromUsername}`} class="request-info">
+                            <UserAvatar username={req.fromUsername} photoUrl={req.fromUserPhotoUrl} />
+                            <div class="request-text">
+                                <p class="request-message">
+                                    <span class="request-username">{req.fromUsername}</span> quiere ser tu amigo
+                                </p>
+                                <p class="request-date">{req.createdAt.toLocaleDateString()}</p>
+                            </div>
+                        </a>
+                        <div class="request-actions">
+                            <button
+                                onClick={() => handleRespond(req.id, 'accepted')}
+                                class="btn btn-sm btn-accept"
+                            >
+                                Aceptar
+                            </button>
+                            <button
+                                onClick={() => handleRespond(req.id, 'rejected')}
+                                class="btn btn-sm btn-ghost btn-reject"
+                            >
+                                Rechazar
+                            </button>
                         </div>
-                        <div>
-                            <p class="font-medium text-[var(--text-primary)]">
-                                <span class="text-[var(--accent-primary)]">{req.fromUsername}</span> quiere ser tu amigo
-                            </p>
-                            <p class="text-xs text-[var(--text-muted)]">
-                                {req.createdAt.toLocaleDateString()}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button
-                            onClick={() => handleRespond(req.id, 'accepted')}
-                            class="btn btn-sm btn-primary"
-                        >
-                            Aceptar
-                        </button>
-                        <button
-                            onClick={() => handleRespond(req.id, 'rejected')}
-                            class="btn btn-sm btn-secondary"
-                        >
-                            Rechazar
-                        </button>
-                    </div>
-                </div>
-            ))}
-        </div>
+                    </li>
+                ))}
+            </ul>
+
+            <style>{`
+                .requests-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: var(--space-3);
+                }
+
+                .request-card {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: var(--space-4);
+                    padding: var(--space-4);
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--border-radius-lg);
+                    transition: border-color var(--transition-fast);
+                }
+                .request-card:hover {
+                    border-color: var(--accent-primary);
+                }
+
+                .request-info {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-3);
+                    text-decoration: none;
+                    color: inherit;
+                    min-width: 0;
+                    flex: 1;
+                }
+
+                .request-text {
+                    min-width: 0;
+                }
+
+                .request-message {
+                    color: var(--text-primary);
+                    margin: 0;
+                    font-weight: 500;
+                }
+
+                .request-username {
+                    color: var(--accent-primary);
+                }
+
+                .request-date {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin: 2px 0 0;
+                }
+
+                .request-actions {
+                    display: flex;
+                    gap: var(--space-2);
+                    flex-shrink: 0;
+                }
+
+                .btn-accept {
+                    background: var(--status-success);
+                    color: white;
+                }
+                .btn-accept:hover {
+                    filter: brightness(1.1);
+                }
+                .btn-reject {
+                    color: var(--text-muted);
+                }
+                .btn-reject:hover {
+                    color: var(--status-danger);
+                    background: transparent;
+                }
+
+                @media (max-width: 480px) {
+                    .request-card {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    .request-actions {
+                        justify-content: flex-end;
+                    }
+                }
+            `}</style>
+        </>
     );
 }
