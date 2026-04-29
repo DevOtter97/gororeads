@@ -1,21 +1,8 @@
 ---
-import AuthLayout from "../layouts/AuthLayout.astro";
-import LoginForm from "../components/auth/LoginForm";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import RootGate from "../components/home/RootGate";
 ---
 
-<AuthLayout title="Iniciar Sesión">
-  <div class="auth-header">
-    <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
-      <span class="logo-icon">📚</span>
-      <span style="font-size: 1.5rem; font-weight: 700;">GoroReads</span>
-    </div>
-    <h1 class="auth-title">Bienvenido de nuevo</h1>
-    <p class="auth-subtitle">Inicia sesión para gestionar tus lecturas</p>
-  </div>
-
-  <LoginForm client:load />
-
-  <div class="auth-footer">
-    <p>¿No tienes cuenta? <a href="/register">Regístrate aquí</a></p>
-  </div>
-</AuthLayout>
+<BaseLayout title="Inicio">
+  <RootGate client:load />
+</BaseLayout>
