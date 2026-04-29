@@ -67,43 +67,43 @@ export class FirestoreReadingRepository implements IReadingRepository {
         return toReading(docRef.id, { ...docData, createdAt: now, updatedAt: now });
     }
 
-    async update(id: string, data: UpdateReadingDTO): Promise<Reading> {
-        const docRef = doc(db, COLLECTION_NAME, id);
+    async update(existing: Reading, data: UpdateReadingDTO): Promise<Reading> {
+        const docRef = doc(db, COLLECTION_NAME, existing.id);
+        const now = Timestamp.now();
 
-        // Convert undefined to null for Firestore
-        const updateData: Record<string, unknown> = {
-            updatedAt: Timestamp.now(),
-        };
-
+        const updateData: Record<string, unknown> = { updatedAt: now };
         if (data.title !== undefined) updateData.title = data.title;
         if (data.category !== undefined) updateData.category = data.category;
         if (data.status !== undefined) updateData.status = data.status;
         if (data.measureUnit !== undefined) updateData.measureUnit = data.measureUnit;
         if (data.tags !== undefined) updateData.tags = data.tags;
-
         if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl ?? null;
         if (data.currentChapter !== undefined) updateData.currentChapter = data.currentChapter ?? null;
         if (data.totalChapters !== undefined) updateData.totalChapters = data.totalChapters ?? null;
         if (data.notes !== undefined) updateData.notes = data.notes ?? null;
         if (data.referenceUrl !== undefined) updateData.referenceUrl = data.referenceUrl ?? null;
         if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
-
         if (data.startedAt !== undefined) {
             updateData.startedAt = data.startedAt ? Timestamp.fromDate(data.startedAt) : null;
         }
-
         if (data.finishedAt !== undefined) {
             updateData.finishedAt = data.finishedAt ? Timestamp.fromDate(data.finishedAt) : null;
         }
 
         await updateDoc(docRef, updateData);
 
-        const updatedDoc = await getDoc(docRef);
-        if (!updatedDoc.exists()) {
-            throw new Error('Reading not found');
-        }
-
-        return toReading(id, updatedDoc.data());
+        return {
+            ...existing,
+            ...data,
+            imageUrl: data.imageUrl !== undefined ? (data.imageUrl ?? undefined) : existing.imageUrl,
+            currentChapter: data.currentChapter !== undefined ? (data.currentChapter ?? undefined) : existing.currentChapter,
+            totalChapters: data.totalChapters !== undefined ? (data.totalChapters ?? undefined) : existing.totalChapters,
+            notes: data.notes !== undefined ? (data.notes ?? undefined) : existing.notes,
+            referenceUrl: data.referenceUrl !== undefined ? (data.referenceUrl ?? undefined) : existing.referenceUrl,
+            startedAt: data.startedAt !== undefined ? (data.startedAt ?? undefined) : existing.startedAt,
+            finishedAt: data.finishedAt !== undefined ? (data.finishedAt ?? undefined) : existing.finishedAt,
+            updatedAt: now.toDate(),
+        };
     }
 
     async delete(id: string): Promise<void> {
@@ -123,55 +123,29 @@ export class FirestoreReadingRepository implements IReadingRepository {
     }
 
     async getByUserId(userId: string, filters?: ReadingFilters): Promise<Reading[]> {
-        console.log('[Firestore] Starting getByUserId for user:', userId);
-        console.time('[Firestore] Total getByUserId');
+        const constraints = [where('userId', '==', userId)];
+        if (filters?.status) constraints.push(where('status', '==', filters.status));
+        const q = query(this.collectionRef, ...constraints);
 
-        console.time('[Firestore] Building query');
-        let q = query(
-            this.collectionRef,
-            where('userId', '==', userId)
-        );
-
-        if (filters?.status) {
-            q = query(
-                this.collectionRef,
-                where('userId', '==', userId),
-                where('status', '==', filters.status)
-            );
-        }
-        console.timeEnd('[Firestore] Building query');
-
-        console.time('[Firestore] getDocs execution');
         const querySnapshot = await getDocs(q);
-        console.timeEnd('[Firestore] getDocs execution');
-        console.log('[Firestore] Documents retrieved:', querySnapshot.docs.length);
-
-        console.time('[Firestore] Processing results');
         let readings = querySnapshot.docs.map((doc) => toReading(doc.id, doc.data()));
 
-        // Client-side sorting to avoid composite index requirement
+        // Sort y filtros complejos en cliente para evitar indices compuestos.
         readings.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
-        // Client-side filtering for complex filters
         if (filters?.category) {
             readings = readings.filter((r) => r.category === filters.category);
         }
-
         if (filters?.tags && filters.tags.length > 0) {
             readings = readings.filter((r) =>
                 filters.tags!.some((tag) => r.tags.includes(tag))
             );
         }
-
         if (filters?.searchQuery) {
             const search = filters.searchQuery.toLowerCase();
-            readings = readings.filter((r) =>
-                r.title.toLowerCase().includes(search)
-            );
+            readings = readings.filter((r) => r.title.toLowerCase().includes(search));
         }
-        console.timeEnd('[Firestore] Processing results');
 
-        console.timeEnd('[Firestore] Total getByUserId');
         return readings;
     }
 

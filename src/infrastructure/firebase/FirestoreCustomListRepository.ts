@@ -99,13 +99,11 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
         return toCustomList(docRef.id, docData);
     }
 
-    async update(id: string, data: UpdateCustomListDTO): Promise<CustomList> {
-        const docRef = doc(db, COLLECTION_NAME, id);
+    async update(existing: CustomList, data: UpdateCustomListDTO): Promise<CustomList> {
+        const docRef = doc(db, COLLECTION_NAME, existing.id);
+        const now = Timestamp.now();
 
-        const updateData: Record<string, unknown> = {
-            updatedAt: Timestamp.now(),
-        };
-
+        const updateData: Record<string, unknown> = { updatedAt: now };
         if (data.name !== undefined) updateData.name = data.name;
         if (data.userName !== undefined) updateData.userName = data.userName;
         if (data.description !== undefined) updateData.description = data.description ?? null;
@@ -115,12 +113,13 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
 
         await updateDoc(docRef, updateData);
 
-        const updatedDoc = await getDoc(docRef);
-        if (!updatedDoc.exists()) {
-            throw new Error('List not found');
-        }
-
-        return toCustomList(id, updatedDoc.data());
+        return {
+            ...existing,
+            ...data,
+            description: data.description !== undefined ? (data.description ?? undefined) : existing.description,
+            coverImage: data.coverImage !== undefined ? (data.coverImage ?? undefined) : existing.coverImage,
+            updatedAt: now.toDate(),
+        };
     }
 
     async delete(id: string): Promise<void> {
@@ -140,39 +139,32 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
     }
 
     async getBySlug(slug: string): Promise<CustomList | null> {
-        // We need to query in a way that satisfies security rules.
-        // Rule: allow read: if visibility != 'private' || (auth != null && userId == auth.uid)
-
-        // 1. Try public/link access
+        // Las reglas permiten leer si la lista es publica/link, o si el usuario auth es el owner.
+        // Lanzamos ambas queries en paralelo y nos quedamos con la primera con resultado.
         const publicQuery = query(
             this.collectionRef,
             where('slug', '==', slug),
             where('visibility', 'in', ['public', 'link'])
         );
 
-        const publicSnapshot = await getDocs(publicQuery);
-        if (!publicSnapshot.empty) {
-            const doc = publicSnapshot.docs[0];
-            return toCustomList(doc.id, doc.data());
-        }
-
-        // 2. If authenticated, try owner access (for private lists)
         const auth = getAuth();
-        if (auth.currentUser) {
-            const ownerQuery = query(
+        const ownerQuery = auth.currentUser
+            ? query(
                 this.collectionRef,
                 where('slug', '==', slug),
                 where('userId', '==', auth.currentUser.uid)
-            );
+            )
+            : null;
 
-            const ownerSnapshot = await getDocs(ownerQuery);
-            if (!ownerSnapshot.empty) {
-                const doc = ownerSnapshot.docs[0];
-                return toCustomList(doc.id, doc.data());
-            }
-        }
+        const [publicSnapshot, ownerSnapshot] = await Promise.all([
+            getDocs(publicQuery),
+            ownerQuery ? getDocs(ownerQuery) : Promise.resolve(null),
+        ]);
 
-        return null;
+        const match = (!publicSnapshot.empty && publicSnapshot.docs[0])
+            || (ownerSnapshot && !ownerSnapshot.empty && ownerSnapshot.docs[0]);
+
+        return match ? toCustomList(match.id, match.data()) : null;
     }
 
     async getByUserId(userId: string): Promise<CustomList[]> {

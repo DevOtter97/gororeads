@@ -30,11 +30,11 @@ export default function SocialHub() {
     }, []);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user?.id) return;
         friendRepository.getPendingRequests(user.id).then(requests => {
             setPendingCount(requests.length);
         }).catch(console.error);
-    }, [user]);
+    }, [user?.id]);
 
     const handleRequestHandled = useCallback(() => {
         setPendingCount(prev => Math.max(0, prev - 1));

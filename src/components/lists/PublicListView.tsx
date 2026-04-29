@@ -25,6 +25,7 @@ export default function PublicListView({ slug }: Props) {
     const [ownerName, setOwnerName] = useState<string>(''); // State for owner name
 
     const [authInitializing, setAuthInitializing] = useState(true);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     useEffect(() => {
         const unsubscribe = authService.onAuthStateChanged((u) => {
@@ -38,69 +39,51 @@ export default function PublicListView({ slug }: Props) {
         if (!authInitializing) {
             loadList();
         }
-    }, [slug, authInitializing, user]);
+    }, [slug, authInitializing]);
 
+    // Re-check liked status if user logs in after the list is already loaded
     useEffect(() => {
-        if (list && user) {
-            checkIfLiked();
-        }
-    }, [list, user]);
+        if (!list || !user) return;
+        customListRepository.hasUserLiked(list.id, user.id).then(setHasLiked).catch(console.error);
+    }, [list?.id, user?.id]);
 
     const loadList = async () => {
-        if (authInitializing) return;
-
         try {
             setLoading(true);
-            const data = await customListRepository.getBySlug(slug);
+            const listData = await customListRepository.getBySlug(slug);
 
-            if (!data) {
+            if (!listData) {
                 setError('Lista no encontrada');
                 return;
             }
 
-            setList(data);
-            setReadings(data.readings);
+            setList(listData);
+            setReadings(listData.readings);
+            setOwnerName(listData.userName); // fallback inmediato mientras cargamos el perfil
 
-            // Load comments
-            const commentsData = await customListRepository.getComments(data.id);
+            // Carga en paralelo todo lo que depende del id de la lista
+            const [commentsData, ownerProfile, liked] = await Promise.all([
+                customListRepository.getComments(listData.id),
+                userRepository.getUserProfile(listData.userId).catch(err => {
+                    console.error('Error fetching list owner:', err);
+                    return null;
+                }),
+                user ? customListRepository.hasUserLiked(listData.id, user.id) : Promise.resolve(false),
+            ]);
+
             setComments(commentsData);
+            if (ownerProfile && (ownerProfile.displayName || ownerProfile.username)) {
+                setOwnerName(ownerProfile.displayName || ownerProfile.username);
+            }
+            setHasLiked(liked);
         } catch (err) {
             console.error('Error loading list:', err);
-            // Only set error if it's not a permission error or if we are sure the user should have access
-            if (user) {
-                setError('Error al cargar la lista. Verifica que tienes permisos.');
-            } else {
-                setError('Error al cargar la lista. Puede que sea privada.');
-            }
+            setError(user
+                ? 'Error al cargar la lista. Verifica que tienes permisos.'
+                : 'Error al cargar la lista. Puede que sea privada.');
         } finally {
             setLoading(false);
         }
-    };
-
-
-
-    // Fetch owner name when list is loaded
-    useEffect(() => {
-        const fetchOwnerName = async () => {
-            if (!list) return;
-            // Default to list.userName
-            setOwnerName(list.userName);
-            try {
-                const owner = await userRepository.getUserProfile(list.userId);
-                if (owner && (owner.displayName || owner.username)) {
-                    setOwnerName(owner.displayName || owner.username);
-                }
-            } catch (err) {
-                console.error('Error fetching list owner:', err);
-            }
-        };
-        fetchOwnerName();
-    }, [list]);
-
-    const checkIfLiked = async () => {
-        if (!list || !user) return;
-        const liked = await customListRepository.hasUserLiked(list.id, user.id);
-        setHasLiked(liked);
     };
 
     const handleLike = async () => {
@@ -133,8 +116,10 @@ export default function PublicListView({ slug }: Props) {
         }
     };
 
-    const copyLink = () => {
-        navigator.clipboard.writeText(window.location.href);
+    const copyLink = async () => {
+        await navigator.clipboard.writeText(window.location.href);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
     };
 
     if (loading || authInitializing) {
@@ -178,12 +163,18 @@ export default function PublicListView({ slug }: Props) {
                         </div>
                     </div>
                     <div class="list-actions">
-                        <button class="btn btn-ghost" onClick={copyLink}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                            </svg>
-                            Copiar Enlace
+                        <button class={`btn btn-ghost ${linkCopied ? 'btn-copied' : ''}`} onClick={copyLink}>
+                            {linkCopied ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                </svg>
+                            )}
+                            {linkCopied ? 'Enlace copiado' : 'Copiar enlace'}
                         </button>
                         {user ? (
                             <button class={`btn ${hasLiked ? 'btn-liked' : 'btn-ghost'}`} onClick={handleLike}>
@@ -338,6 +329,11 @@ export default function PublicListView({ slug }: Props) {
                 .btn-liked {
                     background: white !important;
                     color: #ef4444 !important;
+                }
+
+                .btn-copied {
+                    background: white !important;
+                    color: #10b981 !important;
                 }
 
                 .likes-count {
