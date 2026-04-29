@@ -130,10 +130,8 @@ service cloud.firestore {
         allow create: if request.auth != null
           && request.resource.data.userId == request.auth.uid
           && canSeePost();
-        allow delete: if request.auth != null && (
-          resource.data.userId == request.auth.uid ||
-          postData().authorId == request.auth.uid
-        );
+        // Solo el autor del comentario puede borrarlo, incluso si el post es de otro.
+        allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
       }
 
       // Markers de reposts: cualquier lector del post puede ver. Solo puedes

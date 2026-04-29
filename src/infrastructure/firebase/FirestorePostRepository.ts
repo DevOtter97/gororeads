@@ -155,7 +155,7 @@ export class FirestorePostRepository implements IPostRepository {
 
     // ---------- Comments ----------
 
-    async addComment(postId: string, author: User, text: string): Promise<PostComment> {
+    async addComment(postId: string, author: User, text: string, parentId?: string): Promise<PostComment> {
         const postRef = doc(db, COLLECTION_NAME, postId);
         const commentsRef = collection(db, COLLECTION_NAME, postId, 'comments');
         const now = Timestamp.now();
@@ -165,6 +165,7 @@ export class FirestorePostRepository implements IPostRepository {
             username: author.username,
             photoURL: author.photoURL ?? null,
             text,
+            parentId: parentId ?? null,
             createdAt: now,
         };
 
@@ -181,6 +182,7 @@ export class FirestorePostRepository implements IPostRepository {
             username: author.username,
             photoURL: author.photoURL,
             text,
+            parentId: parentId,
             createdAt: now.toDate(),
         };
     }
@@ -197,6 +199,7 @@ export class FirestorePostRepository implements IPostRepository {
                 username: data.username,
                 photoURL: data.photoURL ?? undefined,
                 text: data.text,
+                parentId: data.parentId ?? undefined,
                 createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
             };
         });

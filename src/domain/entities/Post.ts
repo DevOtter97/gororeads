@@ -67,5 +67,7 @@ export interface PostComment {
     username: string;
     photoURL?: string;
     text: string;
+    /** id del comment al que responde. undefined o null = top-level. */
+    parentId?: string;
     createdAt: Date;
 }
