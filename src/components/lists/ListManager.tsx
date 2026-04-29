@@ -27,9 +27,9 @@ export default function ListManager() {
     }, []);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user?.id) return;
         loadLists();
-    }, [user]);
+    }, [user?.id]);
 
     const loadLists = async () => {
         if (!user) return;
@@ -55,7 +55,7 @@ export default function ListManager() {
     const handleUpdate = async (data: { name: string; description?: string; visibility: ListVisibility; readings?: ListReading[] }) => {
         if (!editingList || !user) return;
         const userNameToUse = user.username || user.displayName || user.email;
-        const updated = await customListRepository.update(editingList.id, { ...data, userName: userNameToUse });
+        const updated = await customListRepository.update(editingList, { ...data, userName: userNameToUse });
         setLists(lists.map(l => l.id === updated.id ? updated : l));
         setEditingList(undefined);
     };

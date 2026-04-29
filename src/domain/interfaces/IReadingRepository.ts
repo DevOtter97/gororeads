@@ -9,7 +9,7 @@ export interface ReadingFilters {
 
 export interface IReadingRepository {
     create(userId: string, data: CreateReadingDTO): Promise<Reading>;
-    update(id: string, data: UpdateReadingDTO): Promise<Reading>;
+    update(existing: Reading, data: UpdateReadingDTO): Promise<Reading>;
     delete(id: string): Promise<void>;
     getById(id: string): Promise<Reading | null>;
     getByUserId(userId: string, filters?: ReadingFilters): Promise<Reading[]>;

@@ -3,7 +3,7 @@ import type { CustomList, CreateCustomListDTO, UpdateCustomListDTO, ListComment,
 export interface ICustomListRepository {
     // CRUD Lists
     create(userId: string, userName: string, data: CreateCustomListDTO): Promise<CustomList>;
-    update(id: string, data: UpdateCustomListDTO): Promise<CustomList>;
+    update(existing: CustomList, data: UpdateCustomListDTO): Promise<CustomList>;
     delete(id: string): Promise<void>;
 
     // Queries

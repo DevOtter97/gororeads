@@ -140,27 +140,24 @@ export class FirebaseAuthService implements IAuthService {
     }
 
     onAuthStateChanged(callback: (user: User | null) => void): () => void {
-        return firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
+        return firebaseOnAuthStateChanged(auth, (firebaseUser) => {
             if (!firebaseUser) {
                 callback(null);
                 return;
             }
 
-            try {
-                // Try to get complete profile from Firestore
-                console.log('[Auth] Fetching user profile from Firestore for:', firebaseUser.uid);
-                const userProfile = await userRepository.getUserProfile(firebaseUser.uid);
-                console.log('[Auth] Firestore profile result:', userProfile);
-                if (userProfile) {
-                    callback(userProfile);
-                    return;
-                }
-            } catch (error) {
-                console.error('[Auth] Error fetching user profile:', error);
-            }
-
-            // Fallback to basic Firebase Auth data
+            // Emite el usuario basico inmediatamente para que la UI no se bloquee
+            // esperando al perfil completo de Firestore. El perfil se enriquece en
+            // background y se vuelve a emitir cuando esta listo.
             callback(mapFirebaseUser(firebaseUser));
+
+            userRepository.getUserProfile(firebaseUser.uid)
+                .then((userProfile) => {
+                    if (userProfile) callback(userProfile);
+                })
+                .catch((error) => {
+                    console.error('[Auth] Error fetching user profile:', error);
+                });
         });
     }
 }

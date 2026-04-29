@@ -57,7 +57,7 @@ export default function UserProfile() {
             }
         };
         loadProfile();
-    }, [user]);
+    }, [user?.id]);
 
     const handleAvatarClick = () => {
         fileInputRef.current?.click();

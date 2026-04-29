@@ -43,9 +43,9 @@ export default function ReadingList() {
         return unsubscribe;
     }, []);
 
-    // Load readings
+    // Load readings (depende solo del id para no re-fetchar cuando se enriquece el perfil)
     useEffect(() => {
-        if (!user) return;
+        if (!user?.id) return;
 
         const loadReadings = async () => {
             try {
@@ -66,7 +66,7 @@ export default function ReadingList() {
         };
 
         loadReadings();
-    }, [user]);
+    }, [user?.id]);
 
     // Apply filters
     useEffect(() => {
@@ -121,7 +121,7 @@ export default function ReadingList() {
             throw new Error('No editing reading');
         }
         try {
-            const updated = await readingRepository.update(editingReading.id, data);
+            const updated = await readingRepository.update(editingReading, data);
             setReadings(readings.map((r) => (r.id === updated.id ? updated : r)));
             setShowModal(false);
             setEditingReading(undefined);
@@ -132,11 +132,12 @@ export default function ReadingList() {
     };
 
     const handleStatusChange = async (id: string, status: ReadingStatus) => {
-        try {
-            const readingToUpdate = readings.find((r) => r.id === id);
+        const readingToUpdate = readings.find((r) => r.id === id);
+        if (!readingToUpdate) return;
 
+        try {
             // Intercept 'reading' status change
-            if (status === 'reading' && readingToUpdate) {
+            if (status === 'reading') {
                 setStartingReading(readingToUpdate);
                 return;
             }
@@ -146,18 +147,15 @@ export default function ReadingList() {
             // Auto-complete if status is completed and totals exist
             if (status === 'completed') {
                 updates.finishedAt = new Date();
-
-                if (readingToUpdate?.totalChapters) {
+                if (readingToUpdate.totalChapters) {
                     updates.currentChapter = readingToUpdate.totalChapters;
                 }
-
-                // If it was percentage, set to 100
-                if (readingToUpdate?.measureUnit === 'percentage') {
+                if (readingToUpdate.measureUnit === 'percentage') {
                     updates.currentChapter = 100;
                 }
             }
 
-            const updated = await readingRepository.update(id, updates);
+            const updated = await readingRepository.update(readingToUpdate, updates);
             setReadings(readings.map((r) => (r.id === id ? updated : r)));
         } catch (err) {
             console.error('Error updating status:', err);
@@ -165,8 +163,10 @@ export default function ReadingList() {
     };
 
     const handleToggleFavorite = async (id: string, isFavorite: boolean) => {
+        const reading = readings.find((r) => r.id === id);
+        if (!reading) return;
         try {
-            const updated = await readingRepository.update(id, { isFavorite });
+            const updated = await readingRepository.update(reading, { isFavorite });
             setReadings(readings.map((r) => (r.id === id ? updated : r)));
         } catch (err) {
             console.error('Error toggling favorite:', err);
@@ -184,7 +184,7 @@ export default function ReadingList() {
                 measureUnit: data.measureUnit
             };
 
-            const updated = await readingRepository.update(startingReading.id, updates);
+            const updated = await readingRepository.update(startingReading, updates);
             setReadings(readings.map((r) => (r.id === startingReading.id ? updated : r)));
             setStartingReading(undefined);
         } catch (err) {
