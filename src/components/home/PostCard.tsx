@@ -1,14 +1,20 @@
 import { useState } from 'preact/hooks';
-import type { Post } from '../../domain/entities/Post';
+import type { Post, PostRepostRef } from '../../domain/entities/Post';
 import type { User } from '../../domain/entities/User';
+import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
 import UserAvatar from '../UserAvatar';
 import PostActions from './PostActions';
 import CommentList from './CommentList';
+import PostMenu from './PostMenu';
 
 interface Props {
     post: Post;
     currentUser: User;
     initialLiked: boolean;
+    initialReposted: boolean;
+    onDelete?: (postId: string) => void;
+    onReposted?: (newRepost: Post) => void;
+    onUnreposted?: (originalPostId: string) => void;
 }
 
 function timeAgo(date: Date): string {
@@ -23,72 +29,141 @@ function timeAgo(date: Date): string {
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
-export default function PostCard({ post, currentUser, initialLiked }: Props) {
+/** Render del contenido (text/image/reading/list) — usado tanto para post normal como para el embed del repost. */
+function PostContent({ source, onImageClick }: {
+    source: Pick<Post, 'type' | 'text' | 'imageUrl' | 'readingRef' | 'listRef'> | PostRepostRef;
+    onImageClick?: () => void;
+}) {
+    return (
+        <>
+            {source.text && <p class="post-text">{source.text}</p>}
+
+            {source.type === 'image' && source.imageUrl && (
+                <button class="post-image-wrapper" onClick={onImageClick} aria-label="Abrir imagen">
+                    <img src={source.imageUrl} alt="" loading="lazy" />
+                </button>
+            )}
+
+            {source.type === 'reading' && source.readingRef && (
+                <div class="post-ref post-ref-reading">
+                    <div class="post-ref-thumb">
+                        {source.readingRef.imageUrl
+                            ? <img src={source.readingRef.imageUrl} alt={source.readingRef.title} />
+                            : <span>{source.readingRef.title.charAt(0).toUpperCase()}</span>
+                        }
+                    </div>
+                    <div class="post-ref-info">
+                        <p class="post-ref-label">Lectura</p>
+                        <p class="post-ref-title">{source.readingRef.title}</p>
+                        <p class="post-ref-meta">{source.readingRef.category}</p>
+                    </div>
+                </div>
+            )}
+
+            {source.type === 'list' && source.listRef && (
+                <a href={`/list/${source.listRef.slug}`} class="post-ref post-ref-list">
+                    <div class="post-ref-thumb post-ref-thumb--list">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <div class="post-ref-info">
+                        <p class="post-ref-label">Lista</p>
+                        <p class="post-ref-title">{source.listRef.name}</p>
+                        <p class="post-ref-meta">{source.listRef.coverCount} lecturas</p>
+                    </div>
+                    <svg class="post-ref-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                </a>
+            )}
+        </>
+    );
+}
+
+export default function PostCard({ post, currentUser, initialLiked, initialReposted, onDelete, onReposted, onUnreposted }: Props) {
     const [lightbox, setLightbox] = useState(false);
     const [commentsExpanded, setCommentsExpanded] = useState(false);
     const [commentsCount, setCommentsCount] = useState(post.commentsCount);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const isOwnPost = post.authorId === currentUser.id;
+    const isRepost = post.type === 'repost' && post.repostOf;
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        try {
+            await postRepository.delete(post.id);
+            onDelete?.(post.id);
+            setConfirmDelete(false);
+        } catch (err) {
+            console.error('Error deleting post:', err);
+            alert('No se pudo eliminar el post.');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     return (
         <>
             <article class="post-card">
-                <header class="post-header">
-                    <a href={`/profile/${post.authorUsername}`} class="post-author">
-                        <UserAvatar username={post.authorUsername} photoUrl={post.authorPhotoURL} size={40} />
-                        <div class="post-author-info">
-                            <span class="post-author-name">{post.authorUsername}</span>
-                            <span class="post-time">{timeAgo(post.createdAt)}</span>
-                        </div>
-                    </a>
-                </header>
-
-                {post.text && <p class="post-text">{post.text}</p>}
-
-                {post.type === 'image' && post.imageUrl && (
-                    <button class="post-image-wrapper" onClick={() => setLightbox(true)} aria-label="Abrir imagen">
-                        <img src={post.imageUrl} alt="" loading="lazy" />
-                    </button>
-                )}
-
-                {post.type === 'reading' && post.readingRef && (
-                    <div class="post-ref post-ref-reading">
-                        <div class="post-ref-thumb">
-                            {post.readingRef.imageUrl
-                                ? <img src={post.readingRef.imageUrl} alt={post.readingRef.title} />
-                                : <span>{post.readingRef.title.charAt(0).toUpperCase()}</span>
-                            }
-                        </div>
-                        <div class="post-ref-info">
-                            <p class="post-ref-label">Lectura</p>
-                            <p class="post-ref-title">{post.readingRef.title}</p>
-                            <p class="post-ref-meta">{post.readingRef.category}</p>
-                        </div>
+                {isRepost && (
+                    <div class="repost-banner">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="17 1 21 5 17 9" />
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                            <polyline points="7 23 3 19 7 15" />
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                        </svg>
+                        <span>
+                            <a href={`/profile/${post.authorUsername}`} class="repost-banner-user">{post.authorUsername}</a>
+                            {' '}reposteó
+                        </span>
+                        <span class="repost-banner-time">· {timeAgo(post.createdAt)}</span>
                     </div>
                 )}
 
-                {post.type === 'list' && post.listRef && (
-                    <a href={`/list/${post.listRef.slug}`} class="post-ref post-ref-list">
-                        <div class="post-ref-thumb post-ref-thumb--list">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                            </svg>
-                        </div>
-                        <div class="post-ref-info">
-                            <p class="post-ref-label">Lista</p>
-                            <p class="post-ref-title">{post.listRef.name}</p>
-                            <p class="post-ref-meta">{post.listRef.coverCount} lecturas</p>
-                        </div>
-                        <svg class="post-ref-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                    </a>
+                <header class="post-header">
+                    {isRepost && post.repostOf ? (
+                        <a href={`/profile/${post.repostOf.authorUsername}`} class="post-author">
+                            <UserAvatar username={post.repostOf.authorUsername} photoUrl={post.repostOf.authorPhotoURL} size={40} />
+                            <div class="post-author-info">
+                                <span class="post-author-name">{post.repostOf.authorUsername}</span>
+                                <span class="post-time">{timeAgo(post.repostOf.createdAt)}</span>
+                            </div>
+                        </a>
+                    ) : (
+                        <a href={`/profile/${post.authorUsername}`} class="post-author">
+                            <UserAvatar username={post.authorUsername} photoUrl={post.authorPhotoURL} size={40} />
+                            <div class="post-author-info">
+                                <span class="post-author-name">{post.authorUsername}</span>
+                                <span class="post-time">{timeAgo(post.createdAt)}</span>
+                            </div>
+                        </a>
+                    )}
+                    {isOwnPost && <PostMenu onDelete={() => setConfirmDelete(true)} />}
+                </header>
+
+                {/* Caption del reposter (text del post type=repost) va antes del embed */}
+                {isRepost && post.text && <p class="post-text">{post.text}</p>}
+
+                {/* Contenido principal */}
+                {isRepost && post.repostOf ? (
+                    <PostContent source={post.repostOf} onImageClick={() => setLightbox(true)} />
+                ) : (
+                    <PostContent source={post} onImageClick={() => setLightbox(true)} />
                 )}
 
                 <PostActions
                     post={{ ...post, commentsCount }}
                     currentUser={currentUser}
                     initialLiked={initialLiked}
+                    initialReposted={initialReposted}
                     onCommentToggle={() => setCommentsExpanded(prev => !prev)}
                     commentsExpanded={commentsExpanded}
+                    onReposted={onReposted}
+                    onUnreposted={onUnreposted}
                 />
 
                 {commentsExpanded && (
@@ -100,14 +175,40 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
                 )}
             </article>
 
-            {lightbox && post.imageUrl && (
-                <div class="lightbox" onClick={() => setLightbox(false)}>
-                    <button class="lightbox-close" onClick={() => setLightbox(false)} aria-label="Cerrar">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                    <img class="lightbox-image" src={post.imageUrl} alt="" onClick={(e) => e.stopPropagation()} />
+            {/* Lightbox para la imagen, sea del post o del embed */}
+            {lightbox && (() => {
+                const src = isRepost && post.repostOf?.imageUrl ? post.repostOf.imageUrl : post.imageUrl;
+                return src ? (
+                    <div class="lightbox" onClick={() => setLightbox(false)}>
+                        <button class="lightbox-close" onClick={() => setLightbox(false)} aria-label="Cerrar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                        <img class="lightbox-image" src={src} alt="" onClick={(e) => e.stopPropagation()} />
+                    </div>
+                ) : null;
+            })()}
+
+            {/* Modal de confirmacion de eliminar */}
+            {confirmDelete && (
+                <div class="modal-overlay" onClick={() => !deleting && setConfirmDelete(false)}>
+                    <div class="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
+                        <div class="confirm-modal-body">
+                            <h3 class="confirm-modal-title">¿Eliminar este post?</h3>
+                            <p class="confirm-modal-text">
+                                Se borrara permanentemente. Los comentarios y likes asociados ya no estaran accesibles.
+                            </p>
+                        </div>
+                        <div class="confirm-modal-actions">
+                            <button class="btn btn-ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+                                Cancelar
+                            </button>
+                            <button class="btn btn-danger" onClick={handleDelete} disabled={deleting}>
+                                {deleting ? 'Eliminando...' : 'Eliminar post'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -120,7 +221,22 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
                     margin-bottom: var(--space-3);
                 }
 
-                .post-header { margin-bottom: var(--space-3); }
+                .repost-banner {
+                    display: flex; align-items: center; gap: var(--space-2);
+                    color: var(--text-muted); font-size: 0.8125rem;
+                    margin-bottom: var(--space-3);
+                }
+                .repost-banner-user {
+                    color: var(--text-secondary); font-weight: 600; text-decoration: none;
+                }
+                .repost-banner-user:hover { color: var(--accent-primary); }
+                .repost-banner-time { opacity: 0.7; }
+
+                .post-header {
+                    display: flex; align-items: flex-start; justify-content: space-between;
+                    gap: var(--space-2);
+                    margin-bottom: var(--space-3);
+                }
 
                 .post-author {
                     display: inline-flex; align-items: center; gap: var(--space-3);
@@ -202,6 +318,22 @@ export default function PostCard({ post, currentUser, initialLiked }: Props) {
                     transition: background var(--transition-fast);
                 }
                 .lightbox-close:hover { background: rgba(255, 255, 255, 0.2); }
+
+                .confirm-modal { max-width: 420px; }
+                .confirm-modal-body { padding: var(--space-6) var(--space-6) var(--space-4); }
+                .confirm-modal-title {
+                    font-size: 1.125rem; font-weight: 600;
+                    color: var(--text-primary); margin: 0 0 var(--space-2);
+                }
+                .confirm-modal-text {
+                    color: var(--text-secondary); font-size: 0.9375rem;
+                    line-height: 1.5; margin: 0;
+                }
+                .confirm-modal-actions {
+                    display: flex; justify-content: flex-end; gap: var(--space-2);
+                    padding: var(--space-4) var(--space-6);
+                    border-top: 1px solid var(--border-color);
+                }
             `}</style>
         </>
     );

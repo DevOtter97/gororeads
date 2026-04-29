@@ -8,30 +8,70 @@ interface Props {
     post: Post;
     currentUser: User;
     initialLiked: boolean;
+    initialReposted: boolean;
     onCommentToggle: () => void;
     commentsExpanded: boolean;
+    onReposted?: (newRepost: Post) => void;
+    onUnreposted?: (originalPostId: string) => void;
 }
 
-export default function PostActions({ post, currentUser, initialLiked, onCommentToggle, commentsExpanded }: Props) {
+/**
+ * Resuelve cual es el "post original" sobre el que se opera al repostear:
+ * - Si post.type === 'repost', el original esta en post.repostOf
+ * - Si no, el original es el propio post
+ * Devuelve un Post-shaped con los campos minimos que necesita repository.repost.
+ */
+function resolveOriginal(post: Post): Post {
+    if (post.type === 'repost' && post.repostOf) {
+        return {
+            id: post.repostOf.postId,
+            authorId: post.repostOf.authorId,
+            authorUsername: post.repostOf.authorUsername,
+            authorPhotoURL: post.repostOf.authorPhotoURL,
+            type: post.repostOf.type,
+            text: post.repostOf.text,
+            imageUrl: post.repostOf.imageUrl,
+            readingRef: post.repostOf.readingRef,
+            listRef: post.repostOf.listRef,
+            likesCount: 0,
+            commentsCount: 0,
+            repostsCount: 0,
+            createdAt: post.repostOf.createdAt,
+        };
+    }
+    return post;
+}
+
+export default function PostActions({
+    post,
+    currentUser,
+    initialLiked,
+    initialReposted,
+    onCommentToggle,
+    commentsExpanded,
+    onReposted,
+    onUnreposted,
+}: Props) {
+    const original = resolveOriginal(post);
+
     const [liked, setLiked] = useState(initialLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
+    const [reposted, setReposted] = useState(initialReposted);
+    const [repostsCount, setRepostsCount] = useState(post.repostsCount);
     const [working, setWorking] = useState(false);
 
     const handleLike = async () => {
         if (working) return;
         setWorking(true);
-        // Optimistic update
         const next = !liked;
         setLiked(next);
         setLikesCount(prev => prev + (next ? 1 : -1));
         try {
             const confirmed = await postRepository.toggleLike(post.id, currentUser.id);
-            // Reconciliacion con el backend por si la transaction divergio
             if (confirmed !== next) {
                 setLiked(confirmed);
                 setLikesCount(prev => prev + (confirmed ? 1 : -1) - (next ? 1 : -1));
             }
-            // Notifica solo en el like (no en el unlike) y no si es self-like
             if (confirmed && post.authorId !== currentUser.id) {
                 await notificationRepository.createNotification({
                     userId: post.authorId,
@@ -47,13 +87,58 @@ export default function PostActions({ post, currentUser, initialLiked, onComment
             }
         } catch (err) {
             console.error('Error toggling like:', err);
-            // Rollback
             setLiked(!next);
             setLikesCount(prev => prev + (!next ? 1 : -1));
         } finally {
             setWorking(false);
         }
     };
+
+    const handleRepost = async () => {
+        if (working) return;
+        setWorking(true);
+        try {
+            if (reposted) {
+                // Optimistic
+                setReposted(false);
+                setRepostsCount(prev => Math.max(0, prev - 1));
+                await postRepository.unrepost(original.id, currentUser.id);
+                onUnreposted?.(original.id);
+            } else {
+                setReposted(true);
+                setRepostsCount(prev => prev + 1);
+                const newRepost = await postRepository.repost(original, currentUser);
+                onReposted?.(newRepost);
+                if (original.authorId !== currentUser.id) {
+                    await notificationRepository.createNotification({
+                        userId: original.authorId,
+                        type: 'post_reposted',
+                        title: 'Repost',
+                        message: `${currentUser.username} reposteó tu post`,
+                        fromUserId: currentUser.id,
+                        fromUsername: currentUser.username,
+                        fromUserPhotoUrl: currentUser.photoURL,
+                        metadata: { postId: original.id },
+                        read: false,
+                    }).catch(err => console.error('Error creating repost notification:', err));
+                }
+            }
+        } catch (err) {
+            console.error('Error toggling repost:', err);
+            // Rollback
+            if (reposted) {
+                setReposted(true);
+                setRepostsCount(prev => prev + 1);
+            } else {
+                setReposted(false);
+                setRepostsCount(prev => Math.max(0, prev - 1));
+            }
+        } finally {
+            setWorking(false);
+        }
+    };
+
+    const repostTitle = reposted ? 'Quitar repost' : 'Repostear';
 
     return (
         <>
@@ -84,10 +169,12 @@ export default function PostActions({ post, currentUser, initialLiked, onComment
                 </button>
 
                 <button
-                    class="post-action"
-                    disabled
-                    title="Próximamente"
-                    aria-label="Repostear"
+                    class={`post-action ${reposted ? 'reposted' : ''}`}
+                    onClick={handleRepost}
+                    disabled={working}
+                    aria-pressed={reposted}
+                    title={repostTitle}
+                    aria-label={repostTitle}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="17 1 21 5 17 9" />
@@ -95,7 +182,7 @@ export default function PostActions({ post, currentUser, initialLiked, onComment
                         <polyline points="7 23 3 19 7 15" />
                         <path d="M21 13v2a4 4 0 0 1-4 4H3" />
                     </svg>
-                    {post.repostsCount > 0 && <span class="post-action-count">{post.repostsCount}</span>}
+                    {repostsCount > 0 && <span class="post-action-count">{repostsCount}</span>}
                 </button>
             </div>
             <style>{`
@@ -128,9 +215,16 @@ export default function PostActions({ post, currentUser, initialLiked, onComment
                 .post-action.liked {
                     color: var(--status-danger);
                 }
-                .post-action.liked:hover {
+                .post-action.liked:not(:disabled):hover {
                     background: rgba(239, 68, 68, 0.1);
                     color: var(--status-danger);
+                }
+                .post-action.reposted {
+                    color: var(--status-success);
+                }
+                .post-action.reposted:not(:disabled):hover {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: var(--status-success);
                 }
                 .post-action.active {
                     color: var(--accent-primary);

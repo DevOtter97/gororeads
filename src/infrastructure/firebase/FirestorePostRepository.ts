@@ -212,6 +212,90 @@ export class FirestorePostRepository implements IPostRepository {
             tx.update(postRef, { commentsCount: increment(-1) });
         });
     }
+
+    // ---------- Reposts ----------
+
+    async repost(originalPost: Post, author: User): Promise<Post> {
+        // 1) Crear el post repost con snapshot del original
+        const now = Timestamp.now();
+        const repostData = {
+            authorId: author.id,
+            authorUsername: author.username,
+            authorPhotoURL: author.photoURL ?? null,
+            type: 'repost' as const,
+            text: null,
+            imageUrl: null,
+            readingRef: null,
+            listRef: null,
+            repostOf: {
+                postId: originalPost.id,
+                authorId: originalPost.authorId,
+                authorUsername: originalPost.authorUsername,
+                authorPhotoURL: originalPost.authorPhotoURL ?? null,
+                type: originalPost.type,
+                text: originalPost.text ?? null,
+                imageUrl: originalPost.imageUrl ?? null,
+                readingRef: originalPost.readingRef ?? null,
+                listRef: originalPost.listRef ?? null,
+                createdAt: Timestamp.fromDate(originalPost.createdAt),
+            },
+            likesCount: 0,
+            commentsCount: 0,
+            repostsCount: 0,
+            createdAt: now,
+        };
+        const repostRef = await addDoc(this.collectionRef, repostData);
+
+        // 2) Marker en el original + increment counter (transaction)
+        const markerRef = doc(db, COLLECTION_NAME, originalPost.id, 'reposts', author.id);
+        const originalRef = doc(db, COLLECTION_NAME, originalPost.id);
+        await runTransaction(db, async (tx) => {
+            tx.set(markerRef, { repostPostId: repostRef.id, createdAt: now });
+            tx.update(originalRef, { repostsCount: increment(1) });
+        });
+
+        return toPost(repostRef.id, { ...repostData, createdAt: now });
+    }
+
+    async unrepost(originalPostId: string, userId: string): Promise<void> {
+        const markerRef = doc(db, COLLECTION_NAME, originalPostId, 'reposts', userId);
+        const originalRef = doc(db, COLLECTION_NAME, originalPostId);
+
+        // Obtenemos el repostPostId del marker antes de borrarlo
+        const markerSnap = await getDoc(markerRef);
+        if (!markerSnap.exists()) return;
+        const repostPostId = markerSnap.data().repostPostId as string | undefined;
+
+        await runTransaction(db, async (tx) => {
+            tx.delete(markerRef);
+            tx.update(originalRef, { repostsCount: increment(-1) });
+        });
+
+        // El post repost se borra fuera de la transaction (no critico si falla;
+        // el marker ya esta limpio).
+        if (repostPostId) {
+            await deleteDoc(doc(db, COLLECTION_NAME, repostPostId)).catch(err => {
+                console.error('Error deleting repost post (marker already cleaned):', err);
+            });
+        }
+    }
+
+    async hasUserReposted(originalPostId: string, userId: string): Promise<boolean> {
+        const snap = await getDoc(doc(db, COLLECTION_NAME, originalPostId, 'reposts', userId));
+        return snap.exists();
+    }
+
+    async getRepostedPostIds(originalPostIds: string[], userId: string): Promise<Set<string>> {
+        if (originalPostIds.length === 0) return new Set();
+        const checks = await Promise.all(
+            originalPostIds.map(id => getDoc(doc(db, COLLECTION_NAME, id, 'reposts', userId))),
+        );
+        const reposted = new Set<string>();
+        checks.forEach((snap, i) => {
+            if (snap.exists()) reposted.add(originalPostIds[i]);
+        });
+        return reposted;
+    }
 }
 
 export const postRepository = new FirestorePostRepository();
