@@ -135,6 +135,21 @@ service cloud.firestore {
           postData().authorId == request.auth.uid
         );
       }
+
+      // Markers de reposts: cualquier lector del post puede ver. Solo puedes
+      // crear/borrar tu propio marker (userId == auth.uid).
+      match /reposts/{userId} {
+        function canSeePost() {
+          let post = get(/databases/$(database)/documents/posts/$(postId)).data;
+          return request.auth != null && (
+            post.authorId == request.auth.uid ||
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(post.authorId))
+          );
+        }
+        allow read: if canSeePost();
+        allow create: if request.auth != null && userId == request.auth.uid && canSeePost();
+        allow delete: if request.auth != null && userId == request.auth.uid;
+      }
     }
 
     // Default deny

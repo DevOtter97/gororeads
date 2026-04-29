@@ -35,4 +35,12 @@ export interface IPostRepository {
     addComment(postId: string, author: User, text: string): Promise<PostComment>;
     getComments(postId: string): Promise<PostComment[]>;
     deleteComment(postId: string, commentId: string): Promise<void>;
+
+    // --- Reposts ---
+    /** Crea un post type='repost' con snapshot del original + marker + increment counter. */
+    repost(originalPost: Post, author: User): Promise<Post>;
+    /** Borra el post repost del usuario sobre originalPostId + marker + decrement. */
+    unrepost(originalPostId: string, userId: string): Promise<void>;
+    hasUserReposted(originalPostId: string, userId: string): Promise<boolean>;
+    getRepostedPostIds(originalPostIds: string[], userId: string): Promise<Set<string>>;
 }

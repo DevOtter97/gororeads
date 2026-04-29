@@ -16,6 +16,7 @@ export default function HomeFeed() {
     const [friendIds, setFriendIds] = useState<string[] | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+    const [repostedIds, setRepostedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [cursor, setCursor] = useState<Date | null>(null);
@@ -46,9 +47,17 @@ export default function HomeFeed() {
                 setCursor(page.nextCursor);
                 setHasMore(page.nextCursor !== null);
 
-                // Precarga estado de likes en paralelo.
-                const liked = await postRepository.getLikedPostIds(page.posts.map(p => p.id), user.id);
+                // Precarga likes (sobre los ids de los posts en feed) y reposts
+                // (sobre los ids ORIGINALES — para posts type=repost usamos el id
+                // del original que viven en repostOf.postId) en paralelo.
+                const likeIds = page.posts.map(p => p.id);
+                const originalIds = page.posts.map(p => p.repostOf?.postId ?? p.id);
+                const [liked, reposted] = await Promise.all([
+                    postRepository.getLikedPostIds(likeIds, user.id),
+                    postRepository.getRepostedPostIds(originalIds, user.id),
+                ]);
                 setLikedIds(liked);
+                setRepostedIds(reposted);
             } catch (err) {
                 console.error('Error loading feed:', err);
                 setError('No se pudo cargar el feed.');
@@ -63,6 +72,38 @@ export default function HomeFeed() {
         setPosts(prev => [post, ...prev]);
     };
 
+    const handleDeleted = (postId: string) => {
+        setPosts(prev => prev.filter(p => p.id !== postId));
+    };
+
+    const handleReposted = (newRepost: Post) => {
+        // El nuevo post repost aparece en el feed (somos su autor) + actualizamos
+        // el estado reposted del original.
+        setPosts(prev => [newRepost, ...prev]);
+        if (newRepost.repostOf) {
+            setRepostedIds(prev => new Set(prev).add(newRepost.repostOf!.postId));
+            // El contador del original puede estar visible en otra card del feed.
+            setPosts(prev => prev.map(p =>
+                p.id === newRepost.repostOf!.postId
+                    ? { ...p, repostsCount: p.repostsCount + 1 }
+                    : p
+            ));
+        }
+    };
+
+    const handleUnreposted = (originalPostId: string) => {
+        // Quitamos el repost del usuario y decrementamos el counter del original.
+        setRepostedIds(prev => {
+            const next = new Set(prev);
+            next.delete(originalPostId);
+            return next;
+        });
+        setPosts(prev => prev
+            .filter(p => !(p.type === 'repost' && p.repostOf?.postId === originalPostId && p.authorId === user?.id))
+            .map(p => p.id === originalPostId ? { ...p, repostsCount: Math.max(0, p.repostsCount - 1) } : p)
+        );
+    };
+
     const handleLoadMore = async () => {
         if (!friendIds || !cursor || loadingMore || !user) return;
         setLoadingMore(true);
@@ -72,8 +113,14 @@ export default function HomeFeed() {
             setCursor(page.nextCursor);
             setHasMore(page.nextCursor !== null);
 
-            const newLiked = await postRepository.getLikedPostIds(page.posts.map(p => p.id), user.id);
+            const likeIds = page.posts.map(p => p.id);
+            const originalIds = page.posts.map(p => p.repostOf?.postId ?? p.id);
+            const [newLiked, newReposted] = await Promise.all([
+                postRepository.getLikedPostIds(likeIds, user.id),
+                postRepository.getRepostedPostIds(originalIds, user.id),
+            ]);
             setLikedIds(prev => new Set([...prev, ...newLiked]));
+            setRepostedIds(prev => new Set([...prev, ...newReposted]));
         } catch (err) {
             console.error('Error loading more posts:', err);
         } finally {
@@ -112,15 +159,22 @@ export default function HomeFeed() {
                         )
                     ) : (
                         <ul class="feed-list">
-                            {posts.map(post => (
-                                <li key={post.id}>
-                                    <PostCard
-                                        post={post}
-                                        currentUser={user}
-                                        initialLiked={likedIds.has(post.id)}
-                                    />
-                                </li>
-                            ))}
+                            {posts.map(post => {
+                                const originalId = post.repostOf?.postId ?? post.id;
+                                return (
+                                    <li key={post.id}>
+                                        <PostCard
+                                            post={post}
+                                            currentUser={user}
+                                            initialLiked={likedIds.has(post.id)}
+                                            initialReposted={repostedIds.has(originalId)}
+                                            onDelete={handleDeleted}
+                                            onReposted={handleReposted}
+                                            onUnreposted={handleUnreposted}
+                                        />
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
 
