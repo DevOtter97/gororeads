@@ -1,9 +1,14 @@
 import { useState } from 'preact/hooks';
 import type { Post } from '../../domain/entities/Post';
+import type { User } from '../../domain/entities/User';
 import UserAvatar from '../UserAvatar';
+import PostActions from './PostActions';
+import CommentList from './CommentList';
 
 interface Props {
     post: Post;
+    currentUser: User;
+    initialLiked: boolean;
 }
 
 function timeAgo(date: Date): string {
@@ -18,8 +23,10 @@ function timeAgo(date: Date): string {
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, currentUser, initialLiked }: Props) {
     const [lightbox, setLightbox] = useState(false);
+    const [commentsExpanded, setCommentsExpanded] = useState(false);
+    const [commentsCount, setCommentsCount] = useState(post.commentsCount);
 
     return (
         <>
@@ -74,6 +81,22 @@ export default function PostCard({ post }: Props) {
                             <polyline points="9 18 15 12 9 6" />
                         </svg>
                     </a>
+                )}
+
+                <PostActions
+                    post={{ ...post, commentsCount }}
+                    currentUser={currentUser}
+                    initialLiked={initialLiked}
+                    onCommentToggle={() => setCommentsExpanded(prev => !prev)}
+                    commentsExpanded={commentsExpanded}
+                />
+
+                {commentsExpanded && (
+                    <CommentList
+                        post={post}
+                        currentUser={currentUser}
+                        onCountChange={(delta) => setCommentsCount(prev => prev + delta)}
+                    />
                 )}
             </article>
 

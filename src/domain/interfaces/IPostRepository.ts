@@ -1,4 +1,4 @@
-import type { Post, CreatePostDTO } from '../entities/Post';
+import type { Post, CreatePostDTO, PostComment } from '../entities/Post';
 import type { User } from '../entities/User';
 
 export interface FeedPage {
@@ -22,4 +22,17 @@ export interface IPostRepository {
     getById(id: string): Promise<Post | null>;
 
     delete(id: string): Promise<void>;
+
+    // --- Likes ---
+    /** Crea o quita el like del usuario sobre el post. Devuelve el estado final. */
+    toggleLike(postId: string, userId: string): Promise<boolean>;
+    /** Para un solo post. */
+    hasUserLiked(postId: string, userId: string): Promise<boolean>;
+    /** Comprueba en paralelo varios posts. Devuelve un set con los ids ya likeados. */
+    getLikedPostIds(postIds: string[], userId: string): Promise<Set<string>>;
+
+    // --- Comments ---
+    addComment(postId: string, author: User, text: string): Promise<PostComment>;
+    getComments(postId: string): Promise<PostComment[]>;
+    deleteComment(postId: string, commentId: string): Promise<void>;
 }

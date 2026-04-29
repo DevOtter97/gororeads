@@ -15,6 +15,7 @@ export default function HomeFeed() {
     const [user, setUser] = useState<User | null>(authService.getCurrentUser());
     const [friendIds, setFriendIds] = useState<string[] | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [cursor, setCursor] = useState<Date | null>(null);
@@ -44,6 +45,10 @@ export default function HomeFeed() {
                 setPosts(page.posts);
                 setCursor(page.nextCursor);
                 setHasMore(page.nextCursor !== null);
+
+                // Precarga estado de likes en paralelo.
+                const liked = await postRepository.getLikedPostIds(page.posts.map(p => p.id), user.id);
+                setLikedIds(liked);
             } catch (err) {
                 console.error('Error loading feed:', err);
                 setError('No se pudo cargar el feed.');
@@ -59,13 +64,16 @@ export default function HomeFeed() {
     };
 
     const handleLoadMore = async () => {
-        if (!friendIds || !cursor || loadingMore) return;
+        if (!friendIds || !cursor || loadingMore || !user) return;
         setLoadingMore(true);
         try {
             const page = await postRepository.getFeedForUser(friendIds, PAGE_SIZE, cursor);
             setPosts(prev => [...prev, ...page.posts]);
             setCursor(page.nextCursor);
             setHasMore(page.nextCursor !== null);
+
+            const newLiked = await postRepository.getLikedPostIds(page.posts.map(p => p.id), user.id);
+            setLikedIds(prev => new Set([...prev, ...newLiked]));
         } catch (err) {
             console.error('Error loading more posts:', err);
         } finally {
@@ -106,7 +114,11 @@ export default function HomeFeed() {
                         <ul class="feed-list">
                             {posts.map(post => (
                                 <li key={post.id}>
-                                    <PostCard post={post} />
+                                    <PostCard
+                                        post={post}
+                                        currentUser={user}
+                                        initialLiked={likedIds.has(post.id)}
+                                    />
                                 </li>
                             ))}
                         </ul>

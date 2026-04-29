@@ -1,12 +1,25 @@
+export type NotificationType =
+    | 'friend_request_received'
+    | 'friend_request_accepted'
+    | 'post_liked'
+    | 'post_commented'
+    | 'post_reposted';
+
+export interface NotificationMetadata {
+    /** id del post asociado a la notificacion (post_liked / post_commented / post_reposted) */
+    postId?: string;
+}
+
 export interface Notification {
     id: string;
     userId: string;
-    type: 'friend_request_received' | 'friend_request_accepted';
+    type: NotificationType;
     title: string;
     message: string;
     fromUserId: string;
     fromUsername: string;
     fromUserPhotoUrl?: string;
+    metadata?: NotificationMetadata;
     read: boolean;
     createdAt: Date;
 }
