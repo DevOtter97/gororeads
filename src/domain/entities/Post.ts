@@ -59,3 +59,13 @@ export interface CreatePostDTO {
 }
 
 export const POST_TEXT_MAX_LENGTH = 500;
+export const COMMENT_TEXT_MAX_LENGTH = 280;
+
+export interface PostComment {
+    id: string;
+    userId: string;
+    username: string;
+    photoURL?: string;
+    text: string;
+    createdAt: Date;
+}

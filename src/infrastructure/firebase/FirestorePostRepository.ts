@@ -10,12 +10,14 @@ import {
     orderBy,
     limit as fsLimit,
     Timestamp,
+    runTransaction,
+    increment,
     type DocumentData,
     type QueryConstraint,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import type { IPostRepository, FeedPage } from '../../domain/interfaces/IPostRepository';
-import type { Post, CreatePostDTO } from '../../domain/entities/Post';
+import type { Post, CreatePostDTO, PostComment } from '../../domain/entities/Post';
 import type { User } from '../../domain/entities/User';
 
 const COLLECTION_NAME = 'posts';
@@ -113,6 +115,102 @@ export class FirestorePostRepository implements IPostRepository {
 
     async delete(id: string): Promise<void> {
         await deleteDoc(doc(db, COLLECTION_NAME, id));
+    }
+
+    // ---------- Likes ----------
+
+    async toggleLike(postId: string, userId: string): Promise<boolean> {
+        const postRef = doc(db, COLLECTION_NAME, postId);
+        const likeRef = doc(db, COLLECTION_NAME, postId, 'likes', userId);
+
+        return runTransaction(db, async (tx) => {
+            const likeSnap = await tx.get(likeRef);
+            if (likeSnap.exists()) {
+                tx.delete(likeRef);
+                tx.update(postRef, { likesCount: increment(-1) });
+                return false;
+            }
+            tx.set(likeRef, { createdAt: Timestamp.now() });
+            tx.update(postRef, { likesCount: increment(1) });
+            return true;
+        });
+    }
+
+    async hasUserLiked(postId: string, userId: string): Promise<boolean> {
+        const snap = await getDoc(doc(db, COLLECTION_NAME, postId, 'likes', userId));
+        return snap.exists();
+    }
+
+    async getLikedPostIds(postIds: string[], userId: string): Promise<Set<string>> {
+        if (postIds.length === 0) return new Set();
+        const checks = await Promise.all(
+            postIds.map(id => getDoc(doc(db, COLLECTION_NAME, id, 'likes', userId))),
+        );
+        const liked = new Set<string>();
+        checks.forEach((snap, i) => {
+            if (snap.exists()) liked.add(postIds[i]);
+        });
+        return liked;
+    }
+
+    // ---------- Comments ----------
+
+    async addComment(postId: string, author: User, text: string): Promise<PostComment> {
+        const postRef = doc(db, COLLECTION_NAME, postId);
+        const commentsRef = collection(db, COLLECTION_NAME, postId, 'comments');
+        const now = Timestamp.now();
+
+        const commentData = {
+            userId: author.id,
+            username: author.username,
+            photoURL: author.photoURL ?? null,
+            text,
+            createdAt: now,
+        };
+
+        // No usamos transaction porque addDoc no soporta refs auto-id en transactions.
+        // El contador puede quedar desfasado si falla el update pero es aceptable.
+        const ref = await addDoc(commentsRef, commentData);
+        await runTransaction(db, async (tx) => {
+            tx.update(postRef, { commentsCount: increment(1) });
+        });
+
+        return {
+            id: ref.id,
+            userId: author.id,
+            username: author.username,
+            photoURL: author.photoURL,
+            text,
+            createdAt: now.toDate(),
+        };
+    }
+
+    async getComments(postId: string): Promise<PostComment[]> {
+        const commentsRef = collection(db, COLLECTION_NAME, postId, 'comments');
+        const q = query(commentsRef, orderBy('createdAt', 'asc'));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => {
+            const data = d.data();
+            return {
+                id: d.id,
+                userId: data.userId,
+                username: data.username,
+                photoURL: data.photoURL ?? undefined,
+                text: data.text,
+                createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+            };
+        });
+    }
+
+    async deleteComment(postId: string, commentId: string): Promise<void> {
+        const postRef = doc(db, COLLECTION_NAME, postId);
+        const commentRef = doc(db, COLLECTION_NAME, postId, 'comments', commentId);
+        await runTransaction(db, async (tx) => {
+            const snap = await tx.get(commentRef);
+            if (!snap.exists()) return;
+            tx.delete(commentRef);
+            tx.update(postRef, { commentsCount: increment(-1) });
+        });
     }
 }
 

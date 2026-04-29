@@ -72,17 +72,69 @@ service cloud.firestore {
     
     // Posts (Home feed)
     match /posts/{postId} {
+      function isAuthor() {
+        return request.auth != null && resource.data.authorId == request.auth.uid;
+      }
+      function isFriendOfAuthor() {
+        return request.auth != null && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)/friends/$(resource.data.authorId)
+        );
+      }
+      function canViewPost() {
+        return isAuthor() || isFriendOfAuthor();
+      }
+
       // Read: el autor o un amigo del autor (existe en su subcoleccion friends).
-      allow read: if request.auth != null && (
-        resource.data.authorId == request.auth.uid ||
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(resource.data.authorId))
-      );
+      allow read: if canViewPost();
       // Create: solo si el autor es el usuario autenticado.
       allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
       // Delete: solo el autor.
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
-      // Update: por ahora solo permitido al autor (para futuros counters via transactions).
-      allow update: if request.auth != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isAuthor();
+      // Update: el autor (cualquier campo) o cualquier auth si solo cambian counters
+      // (likesCount/commentsCount/repostsCount). Permite increments via transaction.
+      allow update: if isAuthor() || (
+        request.auth != null && canViewPost() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likesCount', 'commentsCount', 'repostsCount'])
+      );
+
+      // Likes en el post: cualquier lector del post puede ver. Solo puedes
+      // crear/borrar tu propio like (likeId == auth.uid).
+      match /likes/{userId} {
+        function canSeePost() {
+          let post = get(/databases/$(database)/documents/posts/$(postId)).data;
+          return request.auth != null && (
+            post.authorId == request.auth.uid ||
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(post.authorId))
+          );
+        }
+        allow read: if canSeePost();
+        allow create: if request.auth != null && userId == request.auth.uid && canSeePost();
+        allow delete: if request.auth != null && userId == request.auth.uid;
+      }
+
+      // Comentarios: cualquier lector del post puede ver y comentar. Borrar:
+      // el autor del comentario o el autor del post.
+      match /comments/{commentId} {
+        function postData() {
+          return get(/databases/$(database)/documents/posts/$(postId)).data;
+        }
+        function canSeePost() {
+          let post = postData();
+          return request.auth != null && (
+            post.authorId == request.auth.uid ||
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(post.authorId))
+          );
+        }
+        allow read: if canSeePost();
+        allow create: if request.auth != null
+          && request.resource.data.userId == request.auth.uid
+          && canSeePost();
+        allow delete: if request.auth != null && (
+          resource.data.userId == request.auth.uid ||
+          postData().authorId == request.auth.uid
+        );
+      }
     }
 
     // Default deny

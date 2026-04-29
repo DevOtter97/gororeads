@@ -50,6 +50,7 @@ export class FirestoreNotificationRepository implements INotificationRepository 
                     fromUserId: data.fromUserId,
                     fromUsername: data.fromUsername,
                     fromUserPhotoUrl: data.fromUserPhotoUrl,
+                    metadata: data.metadata,
                     read: data.read,
                     createdAt: data.createdAt?.toDate() || new Date()
                 };
