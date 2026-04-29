@@ -25,4 +25,7 @@ firestore-debug.log*
 # jetbrains setting folder
 .idea/
 cors.json
-.claude/settings.local.json
+
+# Claude Code
+.claude/
+CLAUDE.md
