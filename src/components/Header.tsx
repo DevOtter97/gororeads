@@ -263,17 +263,27 @@ export default function Header({ user, activeTab }: HeaderProps) {
                 /* Nav links inline: ocultos en mobile, visibles en desktop */
                 .nav-links {
                     display: none;
-                    gap: var(--space-4);
+                    gap: var(--space-2);
+                    align-items: center;
                 }
 
                 .nav-link {
                     color: var(--text-secondary);
                     text-decoration: none;
                     font-weight: 500;
-                    transition: color var(--transition-fast);
+                    padding: var(--space-2) var(--space-4);
+                    border-radius: var(--border-radius-md);
+                    transition: color var(--transition-fast),
+                                background var(--transition-fast);
                 }
-                .nav-link:hover,
+                .nav-link:hover {
+                    color: var(--text-primary);
+                    background: var(--bg-tertiary, rgba(255,255,255,0.05));
+                }
                 .nav-link.active {
+                    color: var(--accent-primary);
+                }
+                .nav-link.active:hover {
                     color: var(--accent-primary);
                 }
 
