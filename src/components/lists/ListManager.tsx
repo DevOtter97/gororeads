@@ -224,15 +224,20 @@ export default function ListManager() {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    gap: var(--space-3);
+                    flex-wrap: wrap;
                     margin-bottom: var(--space-6);
                 }
 
                 .page-header h1 {
-                    font-size: 1.75rem;
+                    font-size: 1.5rem;
+                }
+                @media (min-width: 640px) {
+                    .page-header h1 { font-size: 1.75rem; }
                 }
 
                 .lists-grid {
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
                 }
 
                 .empty-state {

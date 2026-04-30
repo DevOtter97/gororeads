@@ -101,17 +101,25 @@ export default function SocialHub() {
                     gap: var(--space-2);
                     border-bottom: 1px solid var(--border-color);
                     margin-bottom: var(--space-6);
-                    overflow-x: auto;
                 }
 
                 .tab-button {
-                    padding: var(--space-3) var(--space-4);
+                    flex: 1 1 auto;
+                    padding: var(--space-3) var(--space-3);
                     font-weight: 500;
+                    font-size: 0.875rem;
                     color: var(--text-secondary);
                     border-bottom: 2px solid transparent;
                     transition: all var(--transition-fast);
                     white-space: nowrap;
                     margin-bottom: var(--space-2);
+                }
+                @media (min-width: 640px) {
+                    .tab-button {
+                        flex: 0 0 auto;
+                        padding: var(--space-3) var(--space-4);
+                        font-size: 1rem;
+                    }
                 }
 
                 .tab-button:hover {
