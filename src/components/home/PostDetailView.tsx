@@ -5,6 +5,7 @@ import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 import PostCard from './PostCard';
 
 interface Props {
@@ -67,13 +68,13 @@ export default function PostDetailView({ postId }: Props) {
                 <Header user={user} activeTab="home" />
                 <main class="container post-detail-main">
                     <a href="/" class="back-link">← Volver a Inicio</a>
-                    <div class="empty-state" style="padding: var(--space-12) var(--space-4)">
-                        <h2>Post no encontrado</h2>
-                        <p class="empty-state-text">
-                            Puede que se haya borrado o que no tengas permiso para verlo.
-                        </p>
+                    <EmptyState
+                        titleAs="h2"
+                        title="Post no encontrado"
+                        description="Puede que se haya borrado o que no tengas permiso para verlo."
+                    >
                         <a href="/" class="btn btn-primary">Volver a Inicio</a>
-                    </div>
+                    </EmptyState>
                 </main>
             </div>
         );

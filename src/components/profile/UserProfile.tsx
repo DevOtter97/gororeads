@@ -4,6 +4,7 @@ import { storage } from '../../config/firebase';
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import Header from '../Header';
+import EmptyState from '../EmptyState';
 import type { User } from '../../domain/entities/User';
 import ImageCropperModal from './ImageCropperModal';
 
@@ -250,9 +251,7 @@ export default function UserProfile() {
                         </div>
                     </div>
                 ) : (
-                    <div class="empty-state">
-                        <p class="empty-state-text">No se pudo cargar el perfil</p>
-                    </div>
+                    <EmptyState description="No se pudo cargar el perfil" />
                 )}
             </main>
 

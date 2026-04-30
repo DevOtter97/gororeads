@@ -7,6 +7,7 @@ import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 
 export default function ListManager() {
     const [user, setUser] = useState<User | null>(null);
@@ -104,16 +105,19 @@ export default function ListManager() {
                 </div>
 
                 {lists.length === 0 ? (
-                    <div class="empty-state">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                        </svg>
-                        <h3>No tienes listas todavía</h3>
-                        <p class="empty-state-text">Crea tu primera lista para organizar y compartir tus lecturas</p>
+                    <EmptyState
+                        icon={
+                            <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                            </svg>
+                        }
+                        title="No tienes listas todavía"
+                        description="Crea tu primera lista para organizar y compartir tus lecturas"
+                    >
                         <button class="btn btn-primary" onClick={() => setShowModal(true)}>
                             Crear Primera Lista
                         </button>
-                    </div>
+                    </EmptyState>
                 ) : (
                     <div class="grid lists-grid">
                         {lists.map((list) => (

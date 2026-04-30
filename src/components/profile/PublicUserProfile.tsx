@@ -8,6 +8,7 @@ import type { CustomList } from '../../domain/entities/CustomList';
 import type { Post, PostComment } from '../../domain/entities/Post';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 import UserAvatar from '../UserAvatar';
 import PostCard from '../home/PostCard';
 import CustomListCard from '../lists/CustomListCard';
@@ -179,11 +180,14 @@ export default function PublicUserProfile({ username }: Props) {
             <div class="min-h-screen">
                 <Header user={currentUser} activeTab="social" />
                 <main class="container main">
-                    <div class="empty-state" style="padding: var(--space-16) var(--space-4)">
-                        <h2>Usuario no encontrado</h2>
-                        <p class="empty-state-text">No existe ningun usuario con ese nombre.</p>
+                    <EmptyState
+                        titleAs="h2"
+                        title="Usuario no encontrado"
+                        description="No existe ningun usuario con ese nombre."
+                        size="large"
+                    >
                         <a href="/social" class="btn btn-primary">Volver a Comunidad</a>
-                    </div>
+                    </EmptyState>
                 </main>
             </div>
         );

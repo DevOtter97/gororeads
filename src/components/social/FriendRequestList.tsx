@@ -4,6 +4,7 @@ import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendR
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 import UserAvatar from '../UserAvatar';
 
 interface Props {
@@ -70,16 +71,18 @@ export default function FriendRequestList({ userId, onRequestHandled }: Props) {
 
     if (requests.length === 0) {
         return (
-            <div class="empty-state">
-                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="8.5" cy="7" r="4" />
-                    <line x1="20" y1="8" x2="20" y2="14" />
-                    <line x1="23" y1="11" x2="17" y2="11" />
-                </svg>
-                <h3 class="empty-state-title">No hay solicitudes</h3>
-                <p class="empty-state-text">Te avisaremos cuando alguien quiera conectar contigo.</p>
-            </div>
+            <EmptyState
+                icon={
+                    <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="8.5" cy="7" r="4" />
+                        <line x1="20" y1="8" x2="20" y2="14" />
+                        <line x1="23" y1="11" x2="17" y2="11" />
+                    </svg>
+                }
+                title="No hay solicitudes"
+                description="Te avisaremos cuando alguien quiera conectar contigo."
+            />
         );
     }
 

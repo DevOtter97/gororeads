@@ -9,6 +9,7 @@ import ReadingDetailsModal from './ReadingDetailsModal';
 import StartReadingModal from './StartReadingModal';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 
 export default function ReadingList() {
     const [user, setUser] = useState(authService.getCurrentUser());
@@ -285,28 +286,27 @@ export default function ReadingList() {
                     )}
 
                     {filteredReadings.length === 0 ? (
-                        <div class="empty-state">
-                            <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                            </svg>
-                            <h2 class="empty-state-title">
-                                {readings.length === 0 ? 'No hay lecturas' : 'Sin resultados'}
-                            </h2>
-                            <p class="empty-state-text">
-                                {readings.length === 0
+                        <EmptyState
+                            titleAs="h2"
+                            icon={
+                                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                                </svg>
+                            }
+                            title={readings.length === 0 ? 'No hay lecturas' : 'Sin resultados'}
+                            description={
+                                readings.length === 0
                                     ? 'Añade tu primer manga, manhwa o novela para empezar'
-                                    : 'Intenta ajustar los filtros para ver más resultados'}
-                            </p>
+                                    : 'Intenta ajustar los filtros para ver más resultados'
+                            }
+                        >
                             {readings.length === 0 && (
-                                <button
-                                    class="btn btn-primary"
-                                    onClick={() => setShowModal(true)}
-                                >
+                                <button class="btn btn-primary" onClick={() => setShowModal(true)}>
                                     Añadir Primera Lectura
                                 </button>
                             )}
-                        </div>
+                        </EmptyState>
                     ) : (
                         <div class="grid reading-grid">
                             {filteredReadings.map((reading) => (
