@@ -120,27 +120,27 @@ export default function PostCard({ post, currentUser, initialLiked, initialRepos
                             <a href={`/profile/${post.authorUsername}`} class="repost-banner-user">{post.authorUsername}</a>
                             {' '}reposteó
                         </span>
-                        <span class="repost-banner-time">· {timeAgo(post.createdAt)}</span>
+                        <a href={`/post/${post.id}`} class="repost-banner-time">· {timeAgo(post.createdAt)}</a>
                     </div>
                 )}
 
                 <header class="post-header">
                     {isRepost && post.repostOf ? (
-                        <a href={`/profile/${post.repostOf.authorUsername}`} class="post-author">
-                            <UserAvatar username={post.repostOf.authorUsername} photoUrl={post.repostOf.authorPhotoURL} size={40} />
-                            <div class="post-author-info">
+                        <div class="post-author-row">
+                            <a href={`/profile/${post.repostOf.authorUsername}`} class="post-author">
+                                <UserAvatar username={post.repostOf.authorUsername} photoUrl={post.repostOf.authorPhotoURL} size={40} />
                                 <span class="post-author-name">{post.repostOf.authorUsername}</span>
-                                <span class="post-time">{timeAgo(post.repostOf.createdAt)}</span>
-                            </div>
-                        </a>
+                            </a>
+                            <a href={`/post/${post.repostOf.postId}`} class="post-time">{timeAgo(post.repostOf.createdAt)}</a>
+                        </div>
                     ) : (
-                        <a href={`/profile/${post.authorUsername}`} class="post-author">
-                            <UserAvatar username={post.authorUsername} photoUrl={post.authorPhotoURL} size={40} />
-                            <div class="post-author-info">
+                        <div class="post-author-row">
+                            <a href={`/profile/${post.authorUsername}`} class="post-author">
+                                <UserAvatar username={post.authorUsername} photoUrl={post.authorPhotoURL} size={40} />
                                 <span class="post-author-name">{post.authorUsername}</span>
-                                <span class="post-time">{timeAgo(post.createdAt)}</span>
-                            </div>
-                        </a>
+                            </a>
+                            <a href={`/post/${post.id}`} class="post-time">{timeAgo(post.createdAt)}</a>
+                        </div>
                     )}
                     {isOwnPost && <PostMenu onDelete={() => setConfirmDelete(true)} />}
                 </header>
@@ -230,22 +230,56 @@ export default function PostCard({ post, currentUser, initialLiked, initialRepos
                     color: var(--text-secondary); font-weight: 600; text-decoration: none;
                 }
                 .repost-banner-user:hover { color: var(--accent-primary); }
-                .repost-banner-time { opacity: 0.7; }
+                .repost-banner-time {
+                    opacity: 0.7;
+                    color: inherit;
+                    text-decoration: none;
+                }
+                .repost-banner-time:hover {
+                    opacity: 1;
+                    text-decoration: underline;
+                }
 
                 .post-header {
-                    display: flex; align-items: flex-start; justify-content: space-between;
+                    display: flex; align-items: center; justify-content: space-between;
                     gap: var(--space-2);
                     margin-bottom: var(--space-3);
+                }
+
+                .post-author-row {
+                    display: flex; align-items: center; gap: var(--space-2);
+                    flex: 1; min-width: 0;
                 }
 
                 .post-author {
                     display: inline-flex; align-items: center; gap: var(--space-3);
                     text-decoration: none; color: inherit;
+                    min-width: 0;
                 }
-                .post-author-info { display: flex; flex-direction: column; line-height: 1.2; }
-                .post-author-name { font-weight: 600; color: var(--text-primary); }
+                .post-author-name {
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
                 .post-author:hover .post-author-name { color: var(--accent-primary); }
-                .post-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+                .post-time {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    text-decoration: none;
+                    flex-shrink: 0;
+                }
+                .post-time::before {
+                    content: '·';
+                    margin-right: var(--space-2);
+                    opacity: 0.5;
+                }
+                .post-time:hover {
+                    color: var(--text-primary);
+                    text-decoration: underline;
+                }
 
                 .post-text {
                     color: var(--text-primary); font-size: 0.95rem; line-height: 1.5;

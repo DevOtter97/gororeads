@@ -13,7 +13,9 @@ export function resolveNotificationTarget(n: Notification): string | null {
         case 'post_liked':
         case 'post_commented':
         case 'post_reposted':
-            return n.metadata?.postId ? `/post/${n.metadata.postId}` : '/';
+            // Notificaciones antiguas (creadas antes de añadir metadata.postId) no
+            // tienen el id del post; en ese caso no navegamos a ningun sitio.
+            return n.metadata?.postId ? `/post/${n.metadata.postId}` : null;
         default:
             return null;
     }
