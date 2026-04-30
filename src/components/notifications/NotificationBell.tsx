@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import type { Notification } from '../../domain/interfaces/INotificationRepository';
+import { resolveNotificationTarget } from './notificationTarget';
 
 interface Props {
     userId: string;
@@ -68,10 +69,8 @@ export default function NotificationBell({ userId }: Props) {
         if (!notification.read) {
             await handleMarkAsRead(notification.id);
         }
-
-        if (notification.type === 'friend_request_received' || notification.type === 'friend_request_accepted') {
-            window.location.href = '/social?tab=requests';
-        }
+        const target = resolveNotificationTarget(notification);
+        if (target) window.location.href = target;
     };
 
     const handleMarkAsRead = async (notificationId: string) => {
@@ -149,6 +148,8 @@ export default function NotificationBell({ userId }: Props) {
                             ))
                         )}
                     </div>
+
+                    <a href="/notifications" class="notification-see-all">Ver todas las notificaciones</a>
                 </div>
             )}
 
@@ -317,6 +318,21 @@ export default function NotificationBell({ userId }: Props) {
                     border-radius: 50%;
                     background: var(--accent-primary);
                     flex-shrink: 0;
+                }
+
+                .notification-see-all {
+                    display: block;
+                    padding: var(--space-3);
+                    text-align: center;
+                    font-size: 0.8125rem;
+                    font-weight: 600;
+                    color: var(--accent-primary);
+                    text-decoration: none;
+                    border-top: 1px solid var(--border-color);
+                    transition: background var(--transition-fast);
+                }
+                .notification-see-all:hover {
+                    background: var(--bg-secondary);
                 }
             `}</style>
         </div>

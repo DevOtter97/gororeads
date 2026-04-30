@@ -183,9 +183,17 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     text-decoration: none;
                     flex-shrink: 0;
                 }
+                /* Texto del logo oculto en mobile (solo se ve el icono) */
+                .logo-text {
+                    display: none;
+                }
+                .logo-icon {
+                    font-size: 1.5rem;
+                }
 
+                /* Nav links inline: ocultos en mobile, visibles en desktop */
                 .nav-links {
-                    display: flex;
+                    display: none;
                     gap: var(--space-4);
                 }
 
@@ -286,54 +294,53 @@ export default function Header({ user, activeTab }: HeaderProps) {
                 .user-menu-item--danger { color: var(--status-danger); }
                 .user-menu-item--danger:hover { background: rgba(239, 68, 68, 0.1); }
 
-                /* Bottom nav: oculto en desktop, visible en mobile */
+                /* Bottom nav: visible en mobile por defecto */
                 .bottom-nav {
-                    display: none;
+                    display: flex;
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: var(--bg-secondary);
+                    border-top: 1px solid var(--border-color);
+                    padding: var(--space-2) 0;
+                    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0));
+                    z-index: 100;
+                    backdrop-filter: blur(8px);
+                }
+                .bottom-nav-item {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    padding: var(--space-2) var(--space-1);
+                    color: var(--text-muted);
+                    text-decoration: none;
+                    font-size: 0.6875rem;
+                    font-weight: 500;
+                    transition: color var(--transition-fast);
+                }
+                .bottom-nav-item.active {
+                    color: var(--accent-primary);
+                }
+                .bottom-nav-label {
+                    font-size: 0.6875rem;
+                    line-height: 1;
                 }
 
-                @media (max-width: 767px) {
-                    .nav-links { display: none; }
-                    .logo-text { display: none; }
-                    .logo-icon { font-size: 1.5rem; }
+                /* Espacio para que el bottom-nav no tape contenido en mobile */
+                body {
+                    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0));
+                }
 
-                    .bottom-nav {
-                        display: flex;
-                        position: fixed;
-                        bottom: 0;
-                        left: 0;
-                        right: 0;
-                        background: var(--bg-secondary);
-                        border-top: 1px solid var(--border-color);
-                        padding: var(--space-2) 0;
-                        padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0));
-                        z-index: 100;
-                        backdrop-filter: blur(8px);
-                    }
-                    .bottom-nav-item {
-                        flex: 1;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 2px;
-                        padding: var(--space-2) var(--space-1);
-                        color: var(--text-muted);
-                        text-decoration: none;
-                        font-size: 0.6875rem;
-                        font-weight: 500;
-                        transition: color var(--transition-fast);
-                    }
-                    .bottom-nav-item.active {
-                        color: var(--accent-primary);
-                    }
-                    .bottom-nav-label {
-                        font-size: 0.6875rem;
-                        line-height: 1;
-                    }
-
-                    /* Espacio para que el bottom-nav no tape contenido */
-                    body {
-                        padding-bottom: calc(64px + env(safe-area-inset-bottom, 0));
-                    }
+                /* Desktop: header inline + sin bottom nav */
+                @media (min-width: 768px) {
+                    .nav-links { display: flex; }
+                    .logo-text { display: inline; }
+                    .logo-icon { font-size: 1.25rem; }
+                    .bottom-nav { display: none; }
+                    body { padding-bottom: 0; }
                 }
             `}</style>
         </>
