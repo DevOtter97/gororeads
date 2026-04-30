@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { Friend } from '../../domain/interfaces/IFriendRepository';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 import UserAvatar from '../UserAvatar';
 
 interface Props {
@@ -53,21 +54,24 @@ export default function FriendList({ userId, onSwitchToSearch }: Props) {
 
     if (friends.length === 0) {
         return (
-            <div class="empty-state">
-                <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                <h3 class="empty-state-title">No tienes amigos agregados</h3>
-                <p class="empty-state-text">Encuentra gente y empieza a socializar.</p>
+            <EmptyState
+                icon={
+                    <svg class="empty-state-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                }
+                title="No tienes amigos agregados"
+                description="Encuentra gente y empieza a socializar."
+            >
                 {onSwitchToSearch && (
                     <button class="btn btn-primary" onClick={onSwitchToSearch}>
                         Buscar usuarios
                     </button>
                 )}
-            </div>
+            </EmptyState>
         );
     }
 

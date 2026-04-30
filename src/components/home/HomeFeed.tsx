@@ -6,6 +6,7 @@ import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendR
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
+import EmptyState from '../EmptyState';
 import PostComposer from './PostComposer';
 import PostCard from './PostCard';
 
@@ -146,16 +147,17 @@ export default function HomeFeed() {
 
                     {posts.length === 0 ? (
                         hasFriends ? (
-                            <div class="empty-state">
-                                <h3 class="empty-state-title">Aún no hay nada por aquí</h3>
-                                <p class="empty-state-text">Tus amigos aún no han posteado. ¡Sé el primero!</p>
-                            </div>
+                            <EmptyState
+                                title="Aún no hay nada por aquí"
+                                description="Tus amigos aún no han posteado. ¡Sé el primero!"
+                            />
                         ) : (
-                            <div class="empty-state">
-                                <h3 class="empty-state-title">Tu feed está vacío</h3>
-                                <p class="empty-state-text">Aún no tienes amigos que sigan posteando. Encuentra gente para empezar.</p>
+                            <EmptyState
+                                title="Tu feed está vacío"
+                                description="Aún no tienes amigos que sigan posteando. Encuentra gente para empezar."
+                            >
                                 <a href="/social?tab=search" class="btn btn-primary">Buscar usuarios</a>
-                            </div>
+                            </EmptyState>
                         )
                     ) : (
                         <ul class="feed-list">
