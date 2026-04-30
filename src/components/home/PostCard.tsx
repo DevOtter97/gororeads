@@ -4,6 +4,7 @@ import type { User } from '../../domain/entities/User';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
 import { timeAgo } from '../../utils/timeAgo';
 import UserAvatar from '../UserAvatar';
+import ConfirmModal from '../ConfirmModal';
 import PostActions from './PostActions';
 import CommentList from './CommentList';
 import PostMenu from './PostMenu';
@@ -181,24 +182,15 @@ export default function PostCard({ post, currentUser, initialLiked, initialRepos
 
             {/* Modal de confirmacion de eliminar */}
             {confirmDelete && (
-                <div class="modal-overlay" onClick={() => !deleting && setConfirmDelete(false)}>
-                    <div class="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-                        <div class="confirm-modal-body">
-                            <h3 class="confirm-modal-title">¿Eliminar este post?</h3>
-                            <p class="confirm-modal-text">
-                                Se borrara permanentemente. Los comentarios y likes asociados ya no estaran accesibles.
-                            </p>
-                        </div>
-                        <div class="confirm-modal-actions">
-                            <button class="btn btn-ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>
-                                Cancelar
-                            </button>
-                            <button class="btn btn-danger" onClick={handleDelete} disabled={deleting}>
-                                {deleting ? 'Eliminando...' : 'Eliminar post'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ConfirmModal
+                    title="¿Eliminar este post?"
+                    message="Se borrara permanentemente. Los comentarios y likes asociados ya no estaran accesibles."
+                    confirmLabel="Eliminar post"
+                    loadingLabel="Eliminando..."
+                    loading={deleting}
+                    onConfirm={handleDelete}
+                    onCancel={() => setConfirmDelete(false)}
+                />
             )}
 
             <style>{`
@@ -341,22 +333,6 @@ export default function PostCard({ post, currentUser, initialLiked, initialRepos
                     transition: background var(--transition-fast);
                 }
                 .lightbox-close:hover { background: rgba(255, 255, 255, 0.2); }
-
-                .confirm-modal { max-width: 420px; }
-                .confirm-modal-body { padding: var(--space-6) var(--space-6) var(--space-4); }
-                .confirm-modal-title {
-                    font-size: 1.125rem; font-weight: 600;
-                    color: var(--text-primary); margin: 0 0 var(--space-2);
-                }
-                .confirm-modal-text {
-                    color: var(--text-secondary); font-size: 0.9375rem;
-                    line-height: 1.5; margin: 0;
-                }
-                .confirm-modal-actions {
-                    display: flex; justify-content: flex-end; gap: var(--space-2);
-                    padding: var(--space-4) var(--space-6);
-                    border-top: 1px solid var(--border-color);
-                }
             `}</style>
         </>
     );

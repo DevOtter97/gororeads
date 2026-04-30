@@ -8,6 +8,7 @@ import CustomListModal from './CustomListModal';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
+import ConfirmModal from '../ConfirmModal';
 
 export default function ListManager() {
     const { user } = useAuth({ redirectIfUnauthenticated: '/' });
@@ -137,20 +138,13 @@ export default function ListManager() {
             )}
 
             {deleteConfirm && (
-                <div class="modal-overlay" onClick={() => setDeleteConfirm(null)}>
-                    <div class="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-                        <h3>¿Eliminar lista?</h3>
-                        <p>Esta acción no se puede deshacer.</p>
-                        <div class="modal-actions">
-                            <button class="btn btn-ghost" onClick={() => setDeleteConfirm(null)}>
-                                Cancelar
-                            </button>
-                            <button class="btn btn-danger" onClick={() => handleDelete(deleteConfirm)}>
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ConfirmModal
+                    title="¿Eliminar lista?"
+                    message="Esta acción no se puede deshacer."
+                    confirmLabel="Eliminar"
+                    onConfirm={() => handleDelete(deleteConfirm)}
+                    onCancel={() => setDeleteConfirm(null)}
+                />
             )}
 
             <style>{`

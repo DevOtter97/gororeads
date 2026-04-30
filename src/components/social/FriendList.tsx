@@ -4,6 +4,7 @@ import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendR
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
 import UserAvatar from '../UserAvatar';
+import ConfirmModal from '../ConfirmModal';
 
 interface Props {
     userId: string;
@@ -126,24 +127,15 @@ export default function FriendList({ userId, onSwitchToSearch }: Props) {
             </div>
 
             {removeConfirm && (
-                <div class="modal-overlay" onClick={() => !removing && setRemoveConfirm(null)}>
-                    <div class="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
-                        <div class="confirm-modal-body">
-                            <h3 class="confirm-modal-title">¿Eliminar a {removeConfirm.username}?</h3>
-                            <p class="confirm-modal-text">
-                                Dejará de ser tu amigo. Podrás enviarle otra solicitud más adelante.
-                            </p>
-                        </div>
-                        <div class="confirm-modal-actions">
-                            <button class="btn btn-ghost" onClick={() => setRemoveConfirm(null)} disabled={removing}>
-                                Cancelar
-                            </button>
-                            <button class="btn btn-danger" onClick={handleRemove} disabled={removing}>
-                                {removing ? 'Eliminando...' : 'Eliminar amigo'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ConfirmModal
+                    title={`¿Eliminar a ${removeConfirm.username}?`}
+                    message="Dejará de ser tu amigo. Podrás enviarle otra solicitud más adelante."
+                    confirmLabel="Eliminar amigo"
+                    loadingLabel="Eliminando..."
+                    loading={removing}
+                    onConfirm={handleRemove}
+                    onCancel={() => setRemoveConfirm(null)}
+                />
             )}
 
             <style>{`
@@ -214,32 +206,6 @@ export default function FriendList({ userId, onSwitchToSearch }: Props) {
                 .friend-card-actions .btn-remove:hover {
                     color: var(--status-danger);
                     background: rgba(239, 68, 68, 0.12);
-                }
-
-                .confirm-modal {
-                    max-width: 420px;
-                }
-                .confirm-modal-body {
-                    padding: var(--space-6) var(--space-6) var(--space-4);
-                }
-                .confirm-modal-title {
-                    font-size: 1.125rem;
-                    font-weight: 600;
-                    color: var(--text-primary);
-                    margin: 0 0 var(--space-2);
-                }
-                .confirm-modal-text {
-                    color: var(--text-secondary);
-                    font-size: 0.9375rem;
-                    line-height: 1.5;
-                    margin: 0;
-                }
-                .confirm-modal-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: var(--space-2);
-                    padding: var(--space-4) var(--space-6);
-                    border-top: 1px solid var(--border-color);
                 }
             `}</style>
         </>
