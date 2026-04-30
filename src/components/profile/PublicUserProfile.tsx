@@ -9,10 +9,10 @@ import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
 import UserAvatar from '../UserAvatar';
-import PostCard from '../home/PostCard';
-import CustomListCard from '../lists/CustomListCard';
-import { timeAgoCompact } from '../../utils/timeAgo';
 import { useAuth } from '../../hooks/useAuth';
+import ProfilePostsTab from './ProfilePostsTab';
+import ProfileCommentsTab from './ProfileCommentsTab';
+import ProfileListsTab from './ProfileListsTab';
 
 interface Props {
     username: string;
@@ -239,94 +239,34 @@ export default function PublicUserProfile({ username }: Props) {
                     </button>
                 </div>
 
-                {/* Tab: Posts */}
                 {activeTab === 'posts' && (
-                    <section class="tab-section">
-                        {postsLoading ? (
-                            <p class="tab-status">Cargando posts...</p>
-                        ) : posts.length === 0 ? (
-                            <p class="tab-status">{profile.username} todavía no ha publicado nada.</p>
-                        ) : (
-                            <>
-                                <ul class="profile-posts-list">
-                                    {posts.map(post => {
-                                        const originalId = post.repostOf?.postId ?? post.id;
-                                        return (
-                                            <li key={post.id}>
-                                                <PostCard
-                                                    post={post}
-                                                    currentUser={currentUser}
-                                                    initialLiked={likedIds.has(post.id)}
-                                                    initialReposted={repostedIds.has(originalId)}
-                                                />
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {postsHasMore && (
-                                    <div class="load-more-wrapper">
-                                        <button class="btn btn-ghost" onClick={loadMorePosts} disabled={postsLoadingMore}>
-                                            {postsLoadingMore ? 'Cargando...' : 'Cargar más'}
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </section>
+                    <ProfilePostsTab
+                        posts={posts}
+                        loading={postsLoading}
+                        hasMore={postsHasMore}
+                        loadingMore={postsLoadingMore}
+                        currentUser={currentUser}
+                        likedIds={likedIds}
+                        repostedIds={repostedIds}
+                        emptyMessage={`${profile.username} todavía no ha publicado nada.`}
+                        onLoadMore={loadMorePosts}
+                    />
                 )}
 
-                {/* Tab: Comentarios */}
                 {activeTab === 'comments' && (
-                    <section class="tab-section">
-                        {commentsLoading ? (
-                            <p class="tab-status">Cargando comentarios...</p>
-                        ) : comments.length === 0 ? (
-                            <p class="tab-status">{profile.username} todavía no ha comentado nada visible para ti.</p>
-                        ) : (
-                            <ul class="profile-comments-list">
-                                {comments.map(c => (
-                                    <li key={c.id} class="profile-comment">
-                                        <UserAvatar username={c.username} photoUrl={c.photoURL} size={32} />
-                                        <div class="profile-comment-body">
-                                            <div class="profile-comment-header">
-                                                <span class="profile-comment-author">{c.username}</span>
-                                                <span class="profile-comment-time">· {timeAgoCompact(c.createdAt)}</span>
-                                                {c.parentId && <span class="profile-comment-tag">respuesta</span>}
-                                            </div>
-                                            <p class="profile-comment-text">{c.text}</p>
-                                            {c.postId && (
-                                                <a href={`/post/${c.postId}`} class="profile-comment-link">
-                                                    Ver post →
-                                                </a>
-                                            )}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </section>
+                    <ProfileCommentsTab
+                        comments={comments}
+                        loading={commentsLoading}
+                        emptyMessage={`${profile.username} todavía no ha comentado nada visible para ti.`}
+                    />
                 )}
 
-                {/* Tab: Listas */}
                 {activeTab === 'lists' && (
-                    <section id="lists" class="tab-section">
-                        {listsLoading ? (
-                            <p class="tab-status">Cargando listas...</p>
-                        ) : lists.length === 0 ? (
-                            <p class="tab-status">{profile.username} todavía no tiene listas publicas.</p>
-                        ) : (
-                            <div class="profile-lists-grid">
-                                {lists.map(list => (
-                                    <CustomListCard
-                                        key={list.id}
-                                        list={list}
-                                        readings={list.readings}
-                                        onView={(l) => { window.location.href = `/list/${l.slug}`; }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </section>
+                    <ProfileListsTab
+                        lists={lists}
+                        loading={listsLoading}
+                        emptyMessage={`${profile.username} todavía no tiene listas publicas.`}
+                    />
                 )}
             </main>
 
@@ -400,124 +340,6 @@ export default function PublicUserProfile({ username }: Props) {
                 }
                 @media (min-width: 640px) {
                     .profile-tab { flex: 0 0 auto; padding: var(--space-3) var(--space-5); font-size: 1rem; }
-                }
-
-                .tab-section { min-height: 200px; }
-                .tab-status {
-                    text-align: center;
-                    color: var(--text-muted);
-                    padding: var(--space-8) var(--space-4);
-                    margin: 0;
-                }
-
-                /* Posts list */
-                .profile-posts-list {
-                    list-style: none; padding: 0; margin: 0;
-                }
-                .load-more-wrapper {
-                    display: flex; justify-content: center;
-                    padding: var(--space-4) 0;
-                }
-
-                /* Comments list */
-                .profile-comments-list {
-                    list-style: none; padding: 0; margin: 0;
-                    display: flex; flex-direction: column; gap: var(--space-3);
-                }
-                .profile-comment {
-                    display: flex;
-                    gap: var(--space-3);
-                    padding: var(--space-3) var(--space-4);
-                    background: var(--bg-card);
-                    border: 1px solid var(--border-color);
-                    border-radius: var(--border-radius-md);
-                }
-                .profile-comment-body { flex: 1; min-width: 0; }
-                .profile-comment-header {
-                    display: flex;
-                    align-items: center;
-                    gap: var(--space-2);
-                    margin-bottom: var(--space-1);
-                }
-                .profile-comment-author {
-                    font-weight: 600;
-                    color: var(--text-primary);
-                    font-size: 0.875rem;
-                }
-                .profile-comment-time {
-                    color: var(--text-muted);
-                    font-size: 0.75rem;
-                }
-                .profile-comment-tag {
-                    margin-left: auto;
-                    font-size: 0.6875rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    color: var(--text-muted);
-                    background: var(--bg-secondary);
-                    padding: 2px 6px;
-                    border-radius: var(--border-radius-sm);
-                }
-                .profile-comment-text {
-                    color: var(--text-primary);
-                    font-size: 0.9375rem;
-                    line-height: 1.4;
-                    margin: 0 0 var(--space-2);
-                    word-break: break-word;
-                }
-                .profile-comment-link {
-                    display: inline-block;
-                    color: var(--accent-primary);
-                    font-size: 0.8125rem;
-                    font-weight: 500;
-                    text-decoration: none;
-                }
-                .profile-comment-link:hover { text-decoration: underline; }
-
-                /* Lists grid */
-                .profile-lists-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-                    gap: var(--space-4);
-                }
-                .profile-list-card {
-                    display: block;
-                    padding: var(--space-4);
-                    background: var(--bg-card);
-                    border: 1px solid var(--border-color);
-                    border-radius: var(--border-radius-lg);
-                    text-decoration: none;
-                    transition: all var(--transition-fast);
-                }
-                .profile-list-card:hover {
-                    border-color: var(--accent-primary);
-                    transform: translateY(-2px);
-                }
-                .profile-list-card-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    gap: var(--space-2);
-                    margin-bottom: var(--space-2);
-                }
-                .profile-list-card-header h3 {
-                    margin: 0;
-                    font-size: 1rem;
-                    color: var(--text-primary);
-                }
-                .profile-list-count {
-                    font-size: 0.75rem;
-                    color: var(--text-muted);
-                    white-space: nowrap;
-                }
-                .profile-list-desc {
-                    color: var(--text-secondary);
-                    font-size: 0.875rem;
-                    margin: 0;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
                 }
 
                 @media (max-width: 600px) {
