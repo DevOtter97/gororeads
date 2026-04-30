@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { User } from '../../domain/entities/User';
 import type { Notification } from '../../domain/interfaces/INotificationRepository';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
+import { useAuth } from '../../hooks/useAuth';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
@@ -12,18 +11,10 @@ import { timeAgo } from '../../utils/timeAgo';
 const PAGE_LIMIT = 100;
 
 export default function NotificationsPage() {
-    const [user, setUser] = useState<User | null>(authService.getCurrentUser());
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
-
-    useEffect(() => {
-        const unsub = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) window.location.href = '/';
-        });
-        return unsub;
-    }, []);
 
     useEffect(() => {
         if (!user?.id) return;

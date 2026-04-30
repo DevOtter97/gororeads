@@ -3,10 +3,9 @@ import type { CustomList, ListComment, ListReading } from '../../domain/entities
 import AuthModal from '../auth/AuthModal';
 import type { Reading } from '../../domain/entities/Reading';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
-import { authService } from '../../infrastructure/firebase'; // Keep existing import
-import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository'; // Import userRepository
-import type { User } from '../../domain/entities/User';
+import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import { CATEGORY_LABELS, STATUS_LABELS } from '../../domain/entities/Reading';
+import { useAuth } from '../../hooks/useAuth';
 import LoadingState from '../LoadingState';
 
 interface Props {
@@ -14,7 +13,8 @@ interface Props {
 }
 
 export default function PublicListView({ slug }: Props) {
-    const [user, setUser] = useState<User | null>(null);
+    // Pagina publica: viewable sin sesion. NO redirige.
+    const { user, authResolved } = useAuth();
     const [list, setList] = useState<CustomList | null>(null);
     const [readings, setReadings] = useState<ListReading[]>([]);
     const [comments, setComments] = useState<ListComment[]>([]);
@@ -23,25 +23,16 @@ export default function PublicListView({ slug }: Props) {
     const [hasLiked, setHasLiked] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
-    const [ownerName, setOwnerName] = useState<string>(''); // State for owner name
+    const [ownerName, setOwnerName] = useState<string>('');
 
-    const [authInitializing, setAuthInitializing] = useState(true);
     const [linkCopied, setLinkCopied] = useState(false);
     const [authModalMessage, setAuthModalMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            setAuthInitializing(false);
-        });
-        return unsubscribe;
-    }, []);
-
-    useEffect(() => {
-        if (!authInitializing) {
+        if (authResolved) {
             loadList();
         }
-    }, [slug, authInitializing]);
+    }, [slug, authResolved]);
 
     // Re-check liked status if user logs in after the list is already loaded
     useEffect(() => {
@@ -126,7 +117,7 @@ export default function PublicListView({ slug }: Props) {
         setTimeout(() => setLinkCopied(false), 2000);
     };
 
-    if (loading || authInitializing) {
+    if (loading || !authResolved) {
         return <LoadingState message="Cargando lista..." />;
     }
 

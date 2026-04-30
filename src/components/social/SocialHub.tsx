@@ -3,30 +3,21 @@ import FriendList from './FriendList';
 import FriendRequestList from './FriendRequestList';
 import UserSearch from './UserSearch';
 import Header from '../Header';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function SocialHub() {
-    const [user, setUser] = useState(authService.getCurrentUser());
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'search'>('friends');
     const [pendingCount, setPendingCount] = useState(0);
 
+    // Tab inicial via query param ?tab=...
     useEffect(() => {
-        const unsubscribe = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) {
-                window.location.href = '/';
-            }
-        });
-
-        // Check for tab query param
         const params = new URLSearchParams(window.location.search);
         const tabParam = params.get('tab');
         if (tabParam === 'requests' || tabParam === 'friends' || tabParam === 'search') {
             setActiveTab(tabParam);
         }
-
-        return unsubscribe;
     }, []);
 
     useEffect(() => {

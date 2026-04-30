@@ -1,5 +1,5 @@
 import { useEffect } from 'preact/hooks';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
+import { useAuth } from '../../hooks/useAuth';
 import LoadingState from '../LoadingState';
 
 /**
@@ -9,16 +9,16 @@ import LoadingState from '../LoadingState';
  * sesion, va al login (/).
  */
 export default function MyProfileRedirect() {
+    const { user, authResolved } = useAuth();
+
     useEffect(() => {
-        const unsub = authService.onAuthStateChanged((u) => {
-            if (!u) {
-                window.location.replace('/');
-            } else {
-                window.location.replace(`/profile/${u.username}`);
-            }
-        });
-        return unsub;
-    }, []);
+        if (!authResolved) return;
+        if (!user) {
+            window.location.replace('/');
+        } else {
+            window.location.replace(`/profile/${user.username}`);
+        }
+    }, [user, authResolved]);
 
     return <LoadingState message="Redirigiendo..." />;
 }

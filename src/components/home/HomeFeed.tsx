@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'preact/hooks';
-import type { User } from '../../domain/entities/User';
 import type { Post } from '../../domain/entities/Post';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { friendRepository } from '../../infrastructure/firebase/FirestoreFriendRepository';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
+import { useAuth } from '../../hooks/useAuth';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
@@ -13,7 +12,7 @@ import PostCard from './PostCard';
 const PAGE_SIZE = 20;
 
 export default function HomeFeed() {
-    const [user, setUser] = useState<User | null>(authService.getCurrentUser());
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [friendIds, setFriendIds] = useState<string[] | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -23,15 +22,6 @@ export default function HomeFeed() {
     const [cursor, setCursor] = useState<Date | null>(null);
     const [hasMore, setHasMore] = useState(false);
     const [error, setError] = useState('');
-
-    // Auth listener
-    useEffect(() => {
-        const unsub = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) window.location.href = '/';
-        });
-        return unsub;
-    }, []);
 
     // Cargar amigos + primera pagina del feed
     useEffect(() => {

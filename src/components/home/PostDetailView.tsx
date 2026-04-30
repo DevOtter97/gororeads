@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { Post } from '../../domain/entities/Post';
-import type { User } from '../../domain/entities/User';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
+import { useAuth } from '../../hooks/useAuth';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
@@ -13,22 +12,12 @@ interface Props {
 }
 
 export default function PostDetailView({ postId }: Props) {
-    const [user, setUser] = useState<User | null>(authService.getCurrentUser());
-    const [authResolved, setAuthResolved] = useState(authService.getCurrentUser() !== null);
+    const { user, authResolved } = useAuth({ redirectIfUnauthenticated: '/' });
     const [post, setPost] = useState<Post | null>(null);
     const [liked, setLiked] = useState(false);
     const [reposted, setReposted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
-
-    useEffect(() => {
-        const unsub = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            setAuthResolved(true);
-            if (!u) window.location.href = '/';
-        });
-        return unsub;
-    }, []);
 
     useEffect(() => {
         if (!authResolved || !user?.id) return;

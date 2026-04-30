@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'preact/hooks';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
@@ -13,6 +12,7 @@ import UserAvatar from '../UserAvatar';
 import PostCard from '../home/PostCard';
 import CustomListCard from '../lists/CustomListCard';
 import { timeAgoCompact } from '../../utils/timeAgo';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Props {
     username: string;
@@ -23,7 +23,7 @@ type Tab = 'posts' | 'comments' | 'lists';
 const POSTS_PAGE_SIZE = 20;
 
 export default function PublicUserProfile({ username }: Props) {
-    const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
+    const { user: currentUser } = useAuth({ redirectIfUnauthenticated: '/' });
     const [profile, setProfile] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
@@ -46,15 +46,6 @@ export default function PublicUserProfile({ username }: Props) {
     const [lists, setLists] = useState<CustomList[]>([]);
     const [listsLoading, setListsLoading] = useState(false);
     const [listsLoaded, setListsLoaded] = useState(false);
-
-    // Auth
-    useEffect(() => {
-        const unsub = authService.onAuthStateChanged((u) => {
-            setCurrentUser(u);
-            if (!u) window.location.href = '/';
-        });
-        return unsub;
-    }, []);
 
     // Carga del perfil basico
     useEffect(() => {

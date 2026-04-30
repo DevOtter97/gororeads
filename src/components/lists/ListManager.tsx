@@ -2,7 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { CustomList, ListVisibility, ListReading } from '../../domain/entities/CustomList';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
 import { authService } from '../../infrastructure/firebase';
-import type { User } from '../../domain/entities/User';
+import { useAuth } from '../../hooks/useAuth';
 import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
 import Header from '../Header';
@@ -10,22 +10,12 @@ import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
 
 export default function ListManager() {
-    const [user, setUser] = useState<User | null>(null);
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [lists, setLists] = useState<CustomList[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingList, setEditingList] = useState<CustomList | undefined>(undefined);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-    useEffect(() => {
-        const unsubscribe = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) {
-                window.location.href = '/';
-            }
-        });
-        return unsubscribe;
-    }, []);
 
     useEffect(() => {
         if (!user?.id) return;
