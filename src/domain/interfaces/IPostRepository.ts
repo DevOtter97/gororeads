@@ -38,6 +38,13 @@ export interface IPostRepository {
     addComment(postId: string, author: User, text: string, parentId?: string): Promise<PostComment>;
     getComments(postId: string): Promise<PostComment[]>;
     deleteComment(postId: string, commentId: string): Promise<void>;
+    /**
+     * Devuelve todos los comentarios escritos por un usuario, en cualquier post,
+     * ordenados por mas recientes. Cada comment trae `postId` para poder enlazar
+     * al post padre. Las reglas Firestore filtran automaticamente los que no
+     * puedes ver (no eres autor del post ni amigo del autor).
+     */
+    getCommentsByUser(userId: string, limit?: number): Promise<PostComment[]>;
 
     // --- Reposts ---
     /** Crea un post type='repost' con snapshot del original + marker + increment counter. */

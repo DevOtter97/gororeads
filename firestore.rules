@@ -15,8 +15,16 @@ service cloud.firestore {
       allow read: if resource.data.visibility != 'private' || (request.auth != null && resource.data.userId == request.auth.uid);
       // Create requires auth and matching userId
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      // Update/delete only by owner
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Update: owner cualquier campo. Cualquier auth si SOLO cambia likesCount
+      // (para que el toggleLike funcione desde otros usuarios). En ningun caso
+      // se acepta un likesCount negativo.
+      allow update: if request.auth != null
+        && request.resource.data.likesCount >= 0
+        && (
+          resource.data.userId == request.auth.uid ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount'])
+        );
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
       
       // Likes subcollection - auth required
       match /likes/{likeId} {
@@ -70,6 +78,20 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
+    // Collection group para comentarios de posts. Permite collection group
+    // queries (ej. listar comentarios de un usuario en su perfil publico) sin
+    // que Firestore las rechace. Funciona solo con comentarios que tienen
+    // postAuthorId denormalizado (los nuevos). Los antiguos siguen siendo
+    // legibles via la regla path-specifica de abajo.
+    match /{path=**}/comments/{commentId} {
+      allow read: if request.auth != null
+        && resource.data.postAuthorId != null
+        && (
+          resource.data.postAuthorId == request.auth.uid
+          || exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(resource.data.postAuthorId))
+        );
+    }
+
     // Posts (Home feed)
     match /posts/{postId} {
       function isAuthor() {
@@ -92,11 +114,16 @@ service cloud.firestore {
       allow delete: if isAuthor();
       // Update: el autor (cualquier campo) o cualquier auth si solo cambian counters
       // (likesCount/commentsCount/repostsCount). Permite increments via transaction.
-      allow update: if isAuthor() || (
-        request.auth != null && canViewPost() &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['likesCount', 'commentsCount', 'repostsCount'])
-      );
+      // Los counters nunca pueden ser negativos.
+      allow update: if request.auth != null
+        && request.resource.data.likesCount >= 0
+        && request.resource.data.commentsCount >= 0
+        && request.resource.data.repostsCount >= 0
+        && (
+          isAuthor() ||
+          (canViewPost() && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['likesCount', 'commentsCount', 'repostsCount']))
+        );
 
       // Likes en el post: cualquier lector del post puede ver. Solo puedes
       // crear/borrar tu propio like (likeId == auth.uid).

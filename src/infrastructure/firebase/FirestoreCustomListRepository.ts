@@ -14,6 +14,7 @@ import {
     arrayRemove,
     increment,
     setDoc,
+    runTransaction,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { getAuth } from 'firebase/auth';
@@ -221,17 +222,22 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
     async toggleLike(listId: string, userId: string): Promise<boolean> {
         const likeRef = doc(db, COLLECTION_NAME, listId, 'likes', userId);
         const listRef = doc(db, COLLECTION_NAME, listId);
-        const likeDoc = await getDoc(likeRef);
-
-        if (likeDoc.exists()) {
-            await deleteDoc(likeRef);
-            await updateDoc(listRef, { likesCount: increment(-1) });
-            return false;
-        } else {
-            await setDoc(likeRef, { createdAt: Timestamp.now() });
-            await updateDoc(listRef, { likesCount: increment(1) });
+        // Transaction: lee like + lista, computa el nuevo count clampeando a 0
+        // (asi nunca queda negativo aunque el counter haya quedado desfasado).
+        return runTransaction(db, async (tx) => {
+            const likeSnap = await tx.get(likeRef);
+            const listSnap = await tx.get(listRef);
+            if (!listSnap.exists()) throw new Error('List not found');
+            const currentCount = (listSnap.data().likesCount as number) ?? 0;
+            if (likeSnap.exists()) {
+                tx.delete(likeRef);
+                tx.update(listRef, { likesCount: Math.max(0, currentCount - 1) });
+                return false;
+            }
+            tx.set(likeRef, { createdAt: Timestamp.now() });
+            tx.update(listRef, { likesCount: currentCount + 1 });
             return true;
-        }
+        });
     }
 
     async hasUserLiked(listId: string, userId: string): Promise<boolean> {

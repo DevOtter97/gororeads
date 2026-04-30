@@ -5,9 +5,10 @@ import { VISIBILITY_LABELS } from '../../domain/entities/CustomList';
 interface Props {
     list: CustomList;
     readings: ListReading[]; // First 4 readings for covers
-    onEdit: (list: CustomList) => void;
-    onDelete: (id: string) => void;
     onView: (list: CustomList) => void;
+    /** Si no se pasan onEdit/onDelete la card oculta esos botones (modo read-only). */
+    onEdit?: (list: CustomList) => void;
+    onDelete?: (id: string) => void;
 }
 
 const getInitials = (title: string): string => {
@@ -91,7 +92,7 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
                 </span>
             </div>
 
-            <div class="card-body">
+            <div class={`card-body ${!list.description ? 'card-body--no-desc' : ''}`}>
                 <h3 class="list-card-title">{list.name}</h3>
                 {list.description && (
                     <p class="list-card-description">{list.description}</p>
@@ -109,14 +110,14 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                         </svg>
-                        {list.likesCount}
+                        {Math.max(0, list.likesCount)}
                     </span>
                 </div>
 
                 <div class="list-card-actions">
                     {list.visibility !== 'private' && (
                         <button
-                            class={`btn btn-ghost btn-sm ${copied ? 'text-success' : ''}`}
+                            class={`btn-list-action ${copied ? 'btn-list-action--success' : ''}`}
                             onClick={copyLink}
                             title={copied ? "¡Enlace copiado!" : "Copiar enlace"}
                         >
@@ -132,31 +133,36 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
                             )}
                         </button>
                     )}
-                    <button
-                        class="btn btn-ghost btn-sm"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(list);
-                        }}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                    </button>
-                    <button
-                        class="btn btn-ghost btn-sm"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(list.id);
-                        }}
-                        style="color: var(--status-dropped);"
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                    </button>
+                    {onEdit && (
+                        <button
+                            class="btn-list-action"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(list);
+                            }}
+                            title="Editar"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                        </button>
+                    )}
+                    {onDelete && (
+                        <button
+                            class="btn-list-action btn-list-action--danger"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(list.id);
+                            }}
+                            title="Eliminar"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -164,6 +170,11 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
                 .custom-list-card {
                     cursor: pointer;
                     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+                    /* Fill row height del grid para que cards con/sin descripcion
+                       tengan la misma altura y los iconos queden anclados abajo. */
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
                 }
 
                 .custom-list-card:hover {
@@ -277,6 +288,7 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
                     font-weight: 600;
                     color: var(--text-primary);
                     margin-bottom: var(--space-1);
+                    text-align: center;
                 }
 
                 .list-card-description {
@@ -306,10 +318,55 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
 
                 .list-card-actions {
                     display: flex;
-                    gap: var(--space-2);
                     padding-top: var(--space-3);
                     border-top: 1px solid var(--border-color);
                     margin-top: auto;
+                    /* Iconos repartidos al maximo: pegados a los bordes con
+                       espacio uniforme entre ellos. */
+                    justify-content: space-between;
+                }
+
+                /* Botones de accion: padding generoso para tener una buena
+                   "zona caliente" de hover, similar a los botones del listado
+                   de amigos. */
+                .btn-list-action {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: var(--border-radius-md);
+                    background: transparent;
+                    color: var(--text-secondary);
+                    transition: all var(--transition-fast);
+                }
+                .btn-list-action:hover {
+                    background: rgba(139, 92, 246, 0.12);
+                    color: var(--accent-primary);
+                }
+                .btn-list-action--danger {
+                    color: var(--status-danger);
+                }
+                .btn-list-action--danger:hover {
+                    background: rgba(239, 68, 68, 0.12);
+                    color: var(--status-danger);
+                }
+                .btn-list-action--success {
+                    color: var(--status-success);
+                }
+                .btn-list-action--success:hover {
+                    background: rgba(16, 185, 129, 0.12);
+                    color: var(--status-success);
+                }
+
+                /* Sin descripcion: empuja meta al fondo (junto con actions). Sigue
+                   alineada a la izquierda como cuando hay descripcion. */
+                .card-body--no-desc .list-card-meta {
+                    margin-top: auto;
+                }
+                /* Cuando ya empuja la meta con auto, las acciones no necesitan repetirlo. */
+                .card-body--no-desc .list-card-actions {
+                    margin-top: 0;
                 }
             `}</style>
         </div>
