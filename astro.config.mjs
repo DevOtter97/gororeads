@@ -42,6 +42,11 @@ export default defineConfig({
           /firestore\.googleapis\.com/,
           /identitytoolkit\.googleapis\.com/,
           /firebasestorage\.googleapis\.com/,
+          // Rutas SSR (Vercel serverless functions). Sin esto el SW interceptaba
+          // y servia la home del precache, ignorando los parametros dinamicos.
+          /^\/post\//,
+          /^\/profile\/[^/]+$/,
+          /^\/list\//,
         ],
         runtimeCaching: [
           {
