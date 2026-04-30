@@ -1,37 +1,18 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useDropdown } from '../../hooks/useDropdown';
 
 interface Props {
     onDelete: () => void;
 }
 
 export default function PostMenu({ onDelete }: Props) {
-    const [open, setOpen] = useState(false);
-    const wrapperRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!open) return;
-        const handleClickOutside = (e: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setOpen(false);
-            }
-        };
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEsc);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEsc);
-        };
-    }, [open]);
+    const { open, setOpen, toggle, wrapperRef } = useDropdown<HTMLDivElement>();
 
     return (
         <>
             <div class="post-menu" ref={wrapperRef}>
                 <button
                     class="post-menu-trigger"
-                    onClick={() => setOpen(prev => !prev)}
+                    onClick={toggle}
                     aria-label="Mas opciones"
                     aria-expanded={open}
                     aria-haspopup="menu"

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import type { Notification } from '../../domain/interfaces/INotificationRepository';
 import { resolveNotificationTarget } from './notificationTarget';
 import { timeAgo } from '../../utils/timeAgo';
+import { useDropdown } from '../../hooks/useDropdown';
 
 interface Props {
     userId: string;
@@ -10,30 +11,15 @@ interface Props {
 
 export default function NotificationBell({ userId }: Props) {
     const [unreadCount, setUnreadCount] = useState(0);
-    const [isOpen, setIsOpen] = useState(false);
+    const { open: isOpen, setOpen: setIsOpen, wrapperRef: dropdownRef } = useDropdown<HTMLDivElement>();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Real-time unread count
     useEffect(() => {
         if (!userId) return;
         return notificationRepository.onUnreadCountChanged(userId, setUnreadCount);
     }, [userId]);
-
-    // Click outside to close
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen]);
 
     const toggleDropdown = async () => {
         const opening = !isOpen;
