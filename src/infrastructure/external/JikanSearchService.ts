@@ -58,14 +58,18 @@ export class JikanSearchService implements IExternalReadingSearchService {
     async search(query: string, category: ReadingCategory, signal?: AbortSignal): Promise<ExternalSearchResult[]> {
         const type = categoryToJikanType(category);
         if (!type) return [];
-        if (query.trim().length < 2) return [];
+        if (query.trim().length < 1) return [];
+        // Nota: Jikan rechaza queries de <3 caracteres con 400 validation error.
+        // Lo aceptamos: el throw cae al fallback de AniList que si admite 1-2 chars.
 
+        // Sin order_by/sort: Jikan ordena por relevancia de match cuando hay `q`,
+        // que es lo que queremos en autocomplete. Si añadiesemos `order_by=popularity`
+        // sobreescribiriamos la relevancia y series populares saldrian antes que
+        // las que de verdad coinciden con el texto.
         const params = new URLSearchParams({
             q: query.trim(),
             type,
             limit: String(SEARCH_LIMIT),
-            order_by: 'popularity',
-            sort: 'asc',
         });
         const url = `${JIKAN_BASE}/manga?${params.toString()}`;
 

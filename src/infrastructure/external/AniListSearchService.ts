@@ -56,10 +56,14 @@ interface AniListResponse {
     errors?: { message: string }[];
 }
 
+// Sin sort explicito: AniList ordena por relevancia (SEARCH_MATCH) cuando hay
+// un parametro `search`, que es lo que queremos para autocomplete. Anteriormente
+// usabamos POPULARITY_DESC y eso devolvia obras populares pero sin matchear el
+// texto buscado.
 const SEARCH_QUERY = `
 query ($search: String, $format: MediaFormat, $country: CountryCode, $perPage: Int) {
     Page(perPage: $perPage) {
-        media(search: $search, type: MANGA, format: $format, countryOfOrigin: $country, sort: POPULARITY_DESC) {
+        media(search: $search, type: MANGA, format: $format, countryOfOrigin: $country) {
             id
             title { romaji english }
             coverImage { large }
@@ -79,7 +83,7 @@ export class AniListSearchService implements IExternalReadingSearchService {
     async search(query: string, category: ReadingCategory, signal?: AbortSignal): Promise<ExternalSearchResult[]> {
         const filter = categoryToAniListFilter(category);
         if (!filter) return [];
-        if (query.trim().length < 2) return [];
+        if (query.trim().length < 1) return [];
 
         const variables: Record<string, unknown> = {
             search: query.trim(),
