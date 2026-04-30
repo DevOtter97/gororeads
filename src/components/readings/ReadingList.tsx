@@ -11,6 +11,7 @@ import StartReadingModal from './StartReadingModal';
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
+import ConfirmModal from '../ConfirmModal';
 
 export default function ReadingList() {
     const { user } = useAuth({ redirectIfUnauthenticated: '/' });
@@ -380,38 +381,15 @@ export default function ReadingList() {
             }
 
             {/* Delete Confirmation Modal */}
-            {
-                deleteConfirm && (
-                    <div class="modal-overlay" onClick={(e) => {
-                        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                            setDeleteConfirm(null);
-                        }
-                    }}>
-                        <div class="modal" style="max-width: 400px;">
-                            <div class="modal-header">
-                                <h2 class="modal-title">Confirmar Eliminación</h2>
-                                <button class="modal-close" onClick={() => setDeleteConfirm(null)}>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <p>¿Estás seguro de que quieres eliminar esta lectura? Esta acción no se puede deshacer.</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-secondary" onClick={() => setDeleteConfirm(null)}>
-                                    Cancelar
-                                </button>
-                                <button class="btn btn-danger" onClick={() => handleDelete(deleteConfirm)}>
-                                    Eliminar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {deleteConfirm && (
+                <ConfirmModal
+                    title="¿Eliminar esta lectura?"
+                    message="Esta acción no se puede deshacer."
+                    confirmLabel="Eliminar"
+                    onConfirm={() => handleDelete(deleteConfirm)}
+                    onCancel={() => setDeleteConfirm(null)}
+                />
+            )}
 
             <style>{`
         .user-email {
