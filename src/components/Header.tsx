@@ -263,7 +263,7 @@ export default function Header({ user, activeTab }: HeaderProps) {
                 /* Nav links inline: ocultos en mobile, visibles en desktop */
                 .nav-links {
                     display: none;
-                    gap: var(--space-2);
+                    gap: var(--space-8);
                     align-items: center;
                 }
 
