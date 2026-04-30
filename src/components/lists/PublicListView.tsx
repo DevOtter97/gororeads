@@ -357,7 +357,7 @@ export default function PublicListView({ slug }: Props) {
 
                 .readings-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
                     gap: var(--space-4);
                 }
 
