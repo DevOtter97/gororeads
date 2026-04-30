@@ -28,6 +28,22 @@ const { title } = Astro.props;
 
     <title>{title} | GoroReads</title>
 
+    <!-- Anti-FOUC: aplica el tema guardado ANTES de renderizar para que no
+         haya parpadeo. Si no hay preferencia guardada, usa la del OS via
+         @media (prefers-color-scheme) en variables.css. -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.dataset.theme = stored;
+          }
+        } catch (e) {
+          // localStorage puede no estar disponible (modo privado, etc.)
+        }
+      })();
+    </script>
+
     <script>
       // Registro del Service Worker. Falla silenciosamente en dev (no hay /sw.js)
       // y se activa en produccion una vez el build genera el archivo.

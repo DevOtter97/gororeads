@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { authService } from '../infrastructure/firebase/FirebaseAuthService';
 import NotificationBell from './notifications/NotificationBell';
+import { getThemePref, setThemePref, type ThemePref } from '../utils/theme';
 
 type Tab = 'home' | 'dashboard' | 'lists' | 'social' | 'settings';
 
@@ -48,9 +49,56 @@ const NAV_ITEMS: { tab: Tab; label: string; href: string; icon: preact.JSX.Eleme
     },
 ];
 
+const THEME_OPTIONS: { value: ThemePref; label: string; icon: preact.JSX.Element }[] = [
+    {
+        value: 'system', label: 'Sistema',
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+        )
+    },
+    {
+        value: 'light', label: 'Claro',
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+        )
+    },
+    {
+        value: 'dark', label: 'Oscuro',
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+        )
+    },
+];
+
 function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
     const [open, setOpen] = useState(false);
+    const [theme, setTheme] = useState<ThemePref>('system');
     const wrapperRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setTheme(getThemePref());
+    }, []);
+
+    const handleThemeChange = (next: ThemePref) => {
+        setTheme(next);
+        setThemePref(next);
+    };
 
     useEffect(() => {
         if (!open) return;
@@ -111,6 +159,26 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
                         </svg>
                         Configuración
                     </a>
+
+                    <div class="user-menu-section">
+                        <p class="user-menu-section-label">Tema</p>
+                        <div class="user-menu-theme-options" role="radiogroup" aria-label="Tema">
+                            {THEME_OPTIONS.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    class={`user-menu-theme-option ${theme === opt.value ? 'active' : ''}`}
+                                    onClick={() => handleThemeChange(opt.value)}
+                                    role="radio"
+                                    aria-checked={theme === opt.value}
+                                    title={opt.label}
+                                >
+                                    {opt.icon}
+                                    <span>{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <button class="user-menu-item user-menu-item--danger" onClick={onLogout} role="menuitem">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -312,6 +380,47 @@ export default function Header({ user, activeTab }: HeaderProps) {
                 .user-menu-item:hover { background: var(--bg-secondary); }
                 .user-menu-item--danger { color: var(--status-danger); }
                 .user-menu-item--danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+                .user-menu-section {
+                    padding: var(--space-2) var(--space-3);
+                    border-top: 1px solid var(--border-color);
+                    margin-top: var(--space-1);
+                }
+                .user-menu-section-label {
+                    margin: 0 0 var(--space-2);
+                    font-size: 0.6875rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: var(--text-muted);
+                    font-weight: 600;
+                }
+                .user-menu-theme-options {
+                    display: flex;
+                    gap: var(--space-1);
+                    background: var(--bg-secondary);
+                    padding: 2px;
+                    border-radius: var(--border-radius-md);
+                }
+                .user-menu-theme-option {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 2px;
+                    padding: var(--space-2);
+                    border-radius: calc(var(--border-radius-md) - 2px);
+                    color: var(--text-secondary);
+                    font-size: 0.6875rem;
+                    transition: all var(--transition-fast);
+                }
+                .user-menu-theme-option:hover {
+                    color: var(--text-primary);
+                }
+                .user-menu-theme-option.active {
+                    background: var(--bg-card);
+                    color: var(--accent-primary);
+                    box-shadow: var(--shadow-sm);
+                }
 
                 /* Bottom nav: visible en mobile por defecto */
                 .bottom-nav {
