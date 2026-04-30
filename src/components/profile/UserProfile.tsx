@@ -161,10 +161,10 @@ export default function UserProfile() {
 
     return (
         <div class="min-h-screen">
-            <Header user={profile || user} activeTab="dashboard" />
+            <Header user={profile || user} activeTab="settings" />
             <main class="container main">
                 <div class="page-header">
-                    <h1 class="page-title">Mi Perfil</h1>
+                    <h1 class="page-title">Configuración</h1>
                 </div>
 
                 {loading ? (
