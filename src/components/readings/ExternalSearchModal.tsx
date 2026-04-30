@@ -15,6 +15,7 @@ const SEARCHABLE_CATEGORIES: ReadingCategory[] = ['manga', 'manhwa', 'manhua', '
 
 const SOURCE_LABELS: Record<ExternalSearchResult['source'], string> = {
     jikan: 'MyAnimeList',
+    anilist: 'AniList',
     openlibrary: 'Open Library',
 };
 
