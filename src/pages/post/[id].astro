@@ -1,0 +1,9 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostDetailView from "../../components/home/PostDetailView";
+---
+
+<BaseLayout title="Post">
+    <PostDetailView client:load postId={Astro.params.id ?? ""} />
+</BaseLayout>
