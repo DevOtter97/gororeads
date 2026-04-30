@@ -40,41 +40,55 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
 
     // Autocomplete externo
     const [suggestions, setSuggestions] = useState<ExternalSearchResult[]>([]);
-    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
     const [searching, setSearching] = useState(false);
+    const [searchError, setSearchError] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [titleFocused, setTitleFocused] = useState(false);
     const searchAbortRef = useRef<AbortController | null>(null);
     const apiAvailable = ExternalReadingSearchService.hasApiFor(category);
 
+    // El dropdown se muestra cuando hay foco, hay API y al menos 1 char.
+    // Asi siempre damos feedback (buscando / sin resultados / error / lista).
+    const trimmedTitle = title.trim();
+    const showDropdown = apiAvailable && titleFocused && trimmedTitle.length >= 1;
+
     // Debounce + fetch sugerencias cuando cambia titulo o categoria
     useEffect(() => {
-        if (!apiAvailable || !titleFocused || title.trim().length < 2) {
+        if (!apiAvailable || trimmedTitle.length < 1) {
             setSuggestions([]);
-            setSuggestionsOpen(false);
+            setHasSearched(false);
+            setSearchError(false);
+            setSearching(false);
             return;
         }
+        // Anuncia "buscando" inmediatamente para feedback rapido
+        setSearching(true);
+        setSearchError(false);
+
         const handler = window.setTimeout(async () => {
             searchAbortRef.current?.abort();
             const controller = new AbortController();
             searchAbortRef.current = controller;
-            setSearching(true);
             try {
                 const data = await externalSearchService.search(title, category, controller.signal);
                 if (!controller.signal.aborted) {
                     setSuggestions(data.slice(0, 6));
-                    setSuggestionsOpen(true);
+                    setHasSearched(true);
                 }
             } catch (err) {
                 if ((err as Error).name !== 'AbortError') {
                     console.error('Error searching external API:', err);
+                    setSuggestions([]);
+                    setHasSearched(true);
+                    setSearchError(true);
                 }
             } finally {
                 if (!controller.signal.aborted) setSearching(false);
             }
         }, SEARCH_DEBOUNCE_MS);
         return () => window.clearTimeout(handler);
-    }, [title, category, apiAvailable, titleFocused]);
+    }, [title, category, apiAvailable, trimmedTitle]);
 
     const applyExternalResult = (r: ExternalSearchResult) => {
         setTitle(r.title);
@@ -86,8 +100,8 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             setTags(prev => Array.from(new Set([...prev, ...r.tags!])));
         }
         setSuggestions([]);
-        setSuggestionsOpen(false);
         setShowSearchModal(false);
+        setTitleFocused(false);
     };
 
     const handleAddTag = () => {
@@ -180,30 +194,43 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
                             </svg>
                         </button>
                     )}
-                    {suggestionsOpen && suggestions.length > 0 && (
-                        <ul class="title-suggestions">
-                            {suggestions.map(s => (
-                                <li key={s.externalId}>
-                                    <button
-                                        type="button"
-                                        class="title-suggestion"
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        onClick={() => applyExternalResult(s)}
-                                    >
-                                        <div class="title-suggestion-thumb">
-                                            {s.imageUrl
-                                                ? <img src={s.imageUrl} alt="" />
-                                                : <span>{s.title.charAt(0).toUpperCase()}</span>
-                                            }
-                                        </div>
-                                        <span class="title-suggestion-title">{s.title}</span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                    {showDropdown && (suggestions.length > 0 || searching || hasSearched) && (
+                        <div class="title-suggestions" onMouseDown={(e) => e.preventDefault()}>
+                            {searching && suggestions.length === 0 && (
+                                <p class="title-suggestions-status">Buscando...</p>
+                            )}
+                            {!searching && hasSearched && suggestions.length === 0 && !searchError && (
+                                <p class="title-suggestions-status">Sin resultados para "{trimmedTitle}".</p>
+                            )}
+                            {!searching && searchError && (
+                                <p class="title-suggestions-status title-suggestions-error">
+                                    No se pudo conectar con la API. Prueba "Buscar online" o rellena a mano.
+                                </p>
+                            )}
+                            {suggestions.length > 0 && (
+                                <ul class="title-suggestions-list">
+                                    {suggestions.map(s => (
+                                        <li key={s.externalId}>
+                                            <button
+                                                type="button"
+                                                class="title-suggestion"
+                                                onClick={() => applyExternalResult(s)}
+                                            >
+                                                <div class="title-suggestion-thumb">
+                                                    {s.imageUrl
+                                                        ? <img src={s.imageUrl} alt="" />
+                                                        : <span>{s.title.charAt(0).toUpperCase()}</span>
+                                                    }
+                                                </div>
+                                                <span class="title-suggestion-title">{s.title}</span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     )}
                 </div>
-                {searching && <span class="title-searching">Buscando sugerencias...</span>}
                 {error && !title.trim() && (
                     <span class="input-error-message">Este campo es obligatorio</span>
                 )}
@@ -594,12 +621,25 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius-md);
             box-shadow: var(--shadow-lg);
-            list-style: none;
             padding: var(--space-1);
-            margin: 0;
             max-height: 320px;
             overflow-y: auto;
             z-index: 50;
+        }
+        .title-suggestions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .title-suggestions-status {
+            margin: 0;
+            padding: var(--space-3);
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+            text-align: center;
+        }
+        .title-suggestions-error {
+            color: var(--status-danger);
         }
         .title-suggestion {
             display: flex;
@@ -637,12 +677,6 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             overflow: hidden;
             text-overflow: ellipsis;
             min-width: 0;
-        }
-        .title-searching {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: var(--space-1);
         }
       `}</style>
 
