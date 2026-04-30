@@ -45,6 +45,10 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     const [hasSearched, setHasSearched] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [titleFocused, setTitleFocused] = useState(false);
+    // Tags que vinieron del ultimo resultado externo aplicado. Sirven para que al
+    // elegir otro resultado distinto se sustituyan (no se acumulen) sin perder
+    // los tags que el usuario haya añadido a mano.
+    const [externalTags, setExternalTags] = useState<string[]>([]);
     const searchAbortRef = useRef<AbortController | null>(null);
     const apiAvailable = ExternalReadingSearchService.hasApiFor(category);
 
@@ -96,9 +100,17 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
         if (r.totalChapters != null) setTotalChapters(String(r.totalChapters));
         if (r.sourceUrl) setUrl(r.sourceUrl);
         if (r.suggestedCategory) setCategory(r.suggestedCategory);
-        if (r.tags && r.tags.length > 0) {
-            setTags(prev => Array.from(new Set([...prev, ...r.tags!])));
-        }
+
+        // Reemplaza los tags que vinieron del resultado anterior por los del nuevo,
+        // manteniendo los que el usuario añadio a mano.
+        const incomingTags = r.tags ?? [];
+        const previousExternalSet = new Set(externalTags);
+        setTags(prev => {
+            const manualTags = prev.filter(t => !previousExternalSet.has(t));
+            return Array.from(new Set([...manualTags, ...incomingTags]));
+        });
+        setExternalTags(incomingTags);
+
         setSuggestions([]);
         setShowSearchModal(false);
         setTitleFocused(false);
