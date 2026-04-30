@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../config/firebase';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { userRepository } from '../../infrastructure/firebase/FirestoreUserRepository';
+import { useAuth } from '../../hooks/useAuth';
 import Header from '../Header';
 import EmptyState from '../EmptyState';
 import type { User } from '../../domain/entities/User';
 import ImageCropperModal from './ImageCropperModal';
 
 export default function UserProfile() {
-    const [user, setUser] = useState(authService.getCurrentUser());
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [profile, setProfile] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -27,16 +27,6 @@ export default function UserProfile() {
     const [tempPhotoSrc, setTempPhotoSrc] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        const unsubscribe = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) {
-                window.location.href = '/';
-            }
-        });
-        return unsubscribe;
-    }, []);
 
     useEffect(() => {
         if (!user) return;

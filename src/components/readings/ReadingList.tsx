@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { readingRepository } from '../../infrastructure/firebase/FirestoreReadingRepository';
 import type { Reading, ReadingStatus, ReadingCategory, CreateReadingDTO, UpdateReadingDTO } from '../../domain/entities/Reading';
+import { useAuth } from '../../hooks/useAuth';
 import ReadingCard from './ReadingCard';
 import ReadingFilters from './ReadingFilters';
 import ReadingForm from './ReadingForm';
@@ -12,7 +13,7 @@ import LoadingState from '../LoadingState';
 import EmptyState from '../EmptyState';
 
 export default function ReadingList() {
-    const [user, setUser] = useState(authService.getCurrentUser());
+    const { user } = useAuth({ redirectIfUnauthenticated: '/' });
     const [readings, setReadings] = useState<Reading[]>([]);
     const [filteredReadings, setFilteredReadings] = useState<Reading[]>([]);
     const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -32,17 +33,6 @@ export default function ReadingList() {
     const [editingReading, setEditingReading] = useState<Reading | undefined>(undefined);
     const [startingReading, setStartingReading] = useState<Reading | undefined>(undefined);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-    // Auth listener
-    useEffect(() => {
-        const unsubscribe = authService.onAuthStateChanged((u) => {
-            setUser(u);
-            if (!u) {
-                window.location.href = '/';
-            }
-        });
-        return unsubscribe;
-    }, []);
 
     // Load readings (depende solo del id para no re-fetchar cuando se enriquece el perfil)
     useEffect(() => {
