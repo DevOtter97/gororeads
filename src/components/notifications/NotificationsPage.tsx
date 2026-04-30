@@ -6,20 +6,9 @@ import { notificationRepository } from '../../infrastructure/firebase/FirestoreN
 import Header from '../Header';
 import LoadingState from '../LoadingState';
 import { resolveNotificationTarget } from './notificationTarget';
+import { timeAgo } from '../../utils/timeAgo';
 
 const PAGE_LIMIT = 100;
-
-function timeAgo(date: Date): string {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'hace un momento';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours} h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `hace ${days} d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
 
 export default function NotificationsPage() {
     const [user, setUser] = useState<User | null>(authService.getCurrentUser());

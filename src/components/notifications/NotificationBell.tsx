@@ -2,23 +2,10 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
 import type { Notification } from '../../domain/interfaces/INotificationRepository';
 import { resolveNotificationTarget } from './notificationTarget';
+import { timeAgo } from '../../utils/timeAgo';
 
 interface Props {
     userId: string;
-}
-
-function timeAgo(date: Date): string {
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'hace un momento';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours}h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `hace ${days}d`;
-    return date.toLocaleDateString();
 }
 
 export default function NotificationBell({ userId }: Props) {
