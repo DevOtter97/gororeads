@@ -1,5 +1,6 @@
 import {
     collection,
+    collectionGroup,
     addDoc,
     deleteDoc,
     getDoc,
@@ -125,13 +126,17 @@ export class FirestorePostRepository implements IPostRepository {
 
         return runTransaction(db, async (tx) => {
             const likeSnap = await tx.get(likeRef);
+            const postSnap = await tx.get(postRef);
+            if (!postSnap.exists()) throw new Error('Post not found');
+            const currentCount = (postSnap.data().likesCount as number) ?? 0;
             if (likeSnap.exists()) {
                 tx.delete(likeRef);
-                tx.update(postRef, { likesCount: increment(-1) });
+                // Clampeamos a 0 para que el counter nunca sea negativo.
+                tx.update(postRef, { likesCount: Math.max(0, currentCount - 1) });
                 return false;
             }
             tx.set(likeRef, { createdAt: Timestamp.now() });
-            tx.update(postRef, { likesCount: increment(1) });
+            tx.update(postRef, { likesCount: currentCount + 1 });
             return true;
         });
     }
@@ -160,12 +165,20 @@ export class FirestorePostRepository implements IPostRepository {
         const commentsRef = collection(db, COLLECTION_NAME, postId, 'comments');
         const now = Timestamp.now();
 
+        // Necesitamos denormalizar postAuthorId en el comment para que la regla
+        // del collection group (perfil del usuario, tab "Comentarios") pueda
+        // filtrar visibilidad sin get() — Firestore no admite get() en rules
+        // que afecten a queries.
+        const postSnap = await getDoc(postRef);
+        const postAuthorId = postSnap.exists() ? (postSnap.data().authorId as string) : null;
+
         const commentData = {
             userId: author.id,
             username: author.username,
             photoURL: author.photoURL ?? null,
             text,
             parentId: parentId ?? null,
+            postAuthorId,
             createdAt: now,
         };
 
@@ -205,14 +218,42 @@ export class FirestorePostRepository implements IPostRepository {
         });
     }
 
+    async getCommentsByUser(userId: string, limit = 50): Promise<PostComment[]> {
+        // Collection group sobre `comments`. Las reglas Firestore filtran
+        // automaticamente los que el viewer no puede ver (no es autor del post
+        // padre ni amigo del autor). Cada doc.ref.parent.parent.id es el postId.
+        const q = query(
+            collectionGroup(db, 'comments'),
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc'),
+            fsLimit(limit),
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => {
+            const data = d.data();
+            return {
+                id: d.id,
+                userId: data.userId,
+                username: data.username,
+                photoURL: data.photoURL ?? undefined,
+                text: data.text,
+                parentId: data.parentId ?? undefined,
+                postId: d.ref.parent.parent?.id,
+                createdAt: (data.createdAt as Timestamp)?.toDate() ?? new Date(),
+            };
+        });
+    }
+
     async deleteComment(postId: string, commentId: string): Promise<void> {
         const postRef = doc(db, COLLECTION_NAME, postId);
         const commentRef = doc(db, COLLECTION_NAME, postId, 'comments', commentId);
         await runTransaction(db, async (tx) => {
             const snap = await tx.get(commentRef);
             if (!snap.exists()) return;
+            const postSnap = await tx.get(postRef);
+            const currentCount = postSnap.exists() ? ((postSnap.data().commentsCount as number) ?? 0) : 0;
             tx.delete(commentRef);
-            tx.update(postRef, { commentsCount: increment(-1) });
+            tx.update(postRef, { commentsCount: Math.max(0, currentCount - 1) });
         });
     }
 
@@ -270,8 +311,10 @@ export class FirestorePostRepository implements IPostRepository {
         const repostPostId = markerSnap.data().repostPostId as string | undefined;
 
         await runTransaction(db, async (tx) => {
+            const originalSnap = await tx.get(originalRef);
+            const currentCount = originalSnap.exists() ? ((originalSnap.data().repostsCount as number) ?? 0) : 0;
             tx.delete(markerRef);
-            tx.update(originalRef, { repostsCount: increment(-1) });
+            tx.update(originalRef, { repostsCount: Math.max(0, currentCount - 1) });
         });
 
         // El post repost se borra fuera de la transaction (no critico si falla;

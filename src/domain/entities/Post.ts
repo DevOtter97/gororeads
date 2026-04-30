@@ -69,5 +69,11 @@ export interface PostComment {
     text: string;
     /** id del comment al que responde. undefined o null = top-level. */
     parentId?: string;
+    /**
+     * Id del post padre. Solo se rellena cuando el comment se obtiene fuera
+     * del contexto de su post (ej. collectionGroup query para listar
+     * comentarios de un usuario). Dentro de un post este campo es undefined.
+     */
+    postId?: string;
     createdAt: Date;
 }

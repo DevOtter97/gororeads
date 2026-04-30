@@ -65,12 +65,13 @@ export default function PostActions({
         setWorking(true);
         const next = !liked;
         setLiked(next);
-        setLikesCount(prev => prev + (next ? 1 : -1));
+        // Clampeamos a 0 en el unlike por si el counter optimista ya estaba en 0.
+        setLikesCount(prev => next ? prev + 1 : Math.max(0, prev - 1));
         try {
             const confirmed = await postRepository.toggleLike(post.id, currentUser.id);
             if (confirmed !== next) {
                 setLiked(confirmed);
-                setLikesCount(prev => prev + (confirmed ? 1 : -1) - (next ? 1 : -1));
+                setLikesCount(prev => Math.max(0, prev + (confirmed ? 1 : -1) - (next ? 1 : -1)));
             }
             if (confirmed && post.authorId !== currentUser.id) {
                 await notificationRepository.createNotification({
@@ -88,7 +89,7 @@ export default function PostActions({
         } catch (err) {
             console.error('Error toggling like:', err);
             setLiked(!next);
-            setLikesCount(prev => prev + (!next ? 1 : -1));
+            setLikesCount(prev => !next ? prev + 1 : Math.max(0, prev - 1));
         } finally {
             setWorking(false);
         }
