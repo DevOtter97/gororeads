@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import type { Reading, CreateReadingDTO, ReadingStatus, ReadingCategory, ReadingMeasureUnit } from '../../domain/entities/Reading';
 import { STATUS_LABELS, CATEGORY_LABELS, MEASURE_UNIT_LABELS } from '../../domain/entities/Reading';
+import type { ExternalSearchResult } from '../../domain/entities/ExternalSearchResult';
+import { externalSearchService, ExternalReadingSearchService } from '../../infrastructure/external/ExternalReadingSearchService';
+import ExternalSearchModal from './ExternalSearchModal';
+
+const SEARCH_DEBOUNCE_MS = 400;
 
 interface Props {
     reading?: Reading;
@@ -32,6 +37,58 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     );
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Autocomplete externo
+    const [suggestions, setSuggestions] = useState<ExternalSearchResult[]>([]);
+    const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+    const [searching, setSearching] = useState(false);
+    const [showSearchModal, setShowSearchModal] = useState(false);
+    const [titleFocused, setTitleFocused] = useState(false);
+    const searchAbortRef = useRef<AbortController | null>(null);
+    const apiAvailable = ExternalReadingSearchService.hasApiFor(category);
+
+    // Debounce + fetch sugerencias cuando cambia titulo o categoria
+    useEffect(() => {
+        if (!apiAvailable || !titleFocused || title.trim().length < 2) {
+            setSuggestions([]);
+            setSuggestionsOpen(false);
+            return;
+        }
+        const handler = window.setTimeout(async () => {
+            searchAbortRef.current?.abort();
+            const controller = new AbortController();
+            searchAbortRef.current = controller;
+            setSearching(true);
+            try {
+                const data = await externalSearchService.search(title, category, controller.signal);
+                if (!controller.signal.aborted) {
+                    setSuggestions(data.slice(0, 6));
+                    setSuggestionsOpen(true);
+                }
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    console.error('Error searching external API:', err);
+                }
+            } finally {
+                if (!controller.signal.aborted) setSearching(false);
+            }
+        }, SEARCH_DEBOUNCE_MS);
+        return () => window.clearTimeout(handler);
+    }, [title, category, apiAvailable, titleFocused]);
+
+    const applyExternalResult = (r: ExternalSearchResult) => {
+        setTitle(r.title);
+        if (r.imageUrl) setImageUrl(r.imageUrl);
+        if (r.totalChapters != null) setTotalChapters(String(r.totalChapters));
+        if (r.sourceUrl) setUrl(r.sourceUrl);
+        if (r.suggestedCategory) setCategory(r.suggestedCategory);
+        if (r.tags && r.tags.length > 0) {
+            setTags(prev => Array.from(new Set([...prev, ...r.tags!])));
+        }
+        setSuggestions([]);
+        setSuggestionsOpen(false);
+        setShowSearchModal(false);
+    };
 
     const handleAddTag = () => {
         const tag = newTag.trim().toLowerCase();
@@ -92,16 +149,61 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
         <form onSubmit={handleSubmit} class="reading-form" novalidate>
             <div class="form-group">
                 <label class="form-label" for="title">Título *</label>
-                <input
-                    id="title"
-                    type="text"
-                    class={`form-input ${error && !title.trim() ? 'input-error' : ''}`}
-                    placeholder="Nombre del manga, manhwa, etc."
-                    value={title}
-                    onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
-                    required
-                    disabled={loading}
-                />
+                <div class="title-input-wrapper">
+                    <input
+                        id="title"
+                        type="text"
+                        class={`form-input ${error && !title.trim() ? 'input-error' : ''}`}
+                        placeholder="Nombre del manga, manhwa, etc."
+                        value={title}
+                        onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
+                        onFocus={() => setTitleFocused(true)}
+                        onBlur={() => {
+                            // Pequeño delay para permitir click en sugerencia antes de cerrar
+                            window.setTimeout(() => setTitleFocused(false), 150);
+                        }}
+                        required
+                        disabled={loading}
+                        autoComplete="off"
+                    />
+                    {apiAvailable && (
+                        <button
+                            type="button"
+                            class="title-search-btn"
+                            onClick={() => setShowSearchModal(true)}
+                            title="Buscar online"
+                            aria-label="Buscar online"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.35-4.35" />
+                            </svg>
+                        </button>
+                    )}
+                    {suggestionsOpen && suggestions.length > 0 && (
+                        <ul class="title-suggestions">
+                            {suggestions.map(s => (
+                                <li key={s.externalId}>
+                                    <button
+                                        type="button"
+                                        class="title-suggestion"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => applyExternalResult(s)}
+                                    >
+                                        <div class="title-suggestion-thumb">
+                                            {s.imageUrl
+                                                ? <img src={s.imageUrl} alt="" />
+                                                : <span>{s.title.charAt(0).toUpperCase()}</span>
+                                            }
+                                        </div>
+                                        <span class="title-suggestion-title">{s.title}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+                {searching && <span class="title-searching">Buscando sugerencias...</span>}
                 {error && !title.trim() && (
                     <span class="input-error-message">Este campo es obligatorio</span>
                 )}
@@ -455,7 +557,103 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             color: var(--error);
             margin-top: 0.25rem;
         }
+
+        /* Autocomplete del titulo */
+        .title-input-wrapper {
+            position: relative;
+        }
+        .title-search-btn {
+            position: absolute;
+            right: var(--space-2);
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-muted);
+            background: transparent;
+            transition: all var(--transition-fast);
+        }
+        .title-search-btn:hover {
+            color: var(--accent-primary);
+            background: var(--bg-card);
+        }
+        .title-input-wrapper input {
+            padding-right: calc(32px + var(--space-3));
+        }
+
+        .title-suggestions {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-lg);
+            list-style: none;
+            padding: var(--space-1);
+            margin: 0;
+            max-height: 320px;
+            overflow-y: auto;
+            z-index: 50;
+        }
+        .title-suggestion {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            width: 100%;
+            padding: var(--space-2);
+            border-radius: var(--border-radius-sm);
+            background: transparent;
+            text-align: left;
+            transition: background var(--transition-fast);
+        }
+        .title-suggestion:hover {
+            background: var(--bg-secondary);
+        }
+        .title-suggestion-thumb {
+            width: 32px;
+            height: 44px;
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+        .title-suggestion-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .title-suggestion-title {
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .title-searching {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+        }
       `}</style>
+
+            {showSearchModal && (
+                <ExternalSearchModal
+                    initialQuery={title}
+                    initialCategory={category}
+                    onSelect={applyExternalResult}
+                    onClose={() => setShowSearchModal(false)}
+                />
+            )}
         </form>
     );
 }
