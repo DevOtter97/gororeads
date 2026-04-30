@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { CustomList, ListComment, ListReading } from '../../domain/entities/CustomList';
+import AuthModal from '../auth/AuthModal';
 import type { Reading } from '../../domain/entities/Reading';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
 import { authService } from '../../infrastructure/firebase'; // Keep existing import
@@ -26,6 +27,7 @@ export default function PublicListView({ slug }: Props) {
 
     const [authInitializing, setAuthInitializing] = useState(true);
     const [linkCopied, setLinkCopied] = useState(false);
+    const [authModalMessage, setAuthModalMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = authService.onAuthStateChanged((u) => {
@@ -155,6 +157,8 @@ export default function PublicListView({ slug }: Props) {
         <div class="public-list-container">
             <header class="list-header">
                 <div class="container">
+                    <a href="/" class="list-back-link">← Volver a Inicio</a>
+                    <div class="list-header-row">
                     <div class="list-info">
                         <h1>{list.name}</h1>
                         {list.description && <p class="list-description">{list.description}</p>}
@@ -178,21 +182,22 @@ export default function PublicListView({ slug }: Props) {
                             )}
                             {linkCopied ? 'Enlace copiado' : 'Copiar enlace'}
                         </button>
-                        {user ? (
-                            <button class={`btn ${hasLiked ? 'btn-liked' : 'btn-ghost'}`} onClick={handleLike}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill={hasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                </svg>
-                                {Math.max(0, list.likesCount)}
-                            </button>
-                        ) : (
-                            <span class="likes-count">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                </svg>
-                                {Math.max(0, list.likesCount)}
-                            </span>
-                        )}
+                        <button
+                            class={`btn ${hasLiked ? 'btn-liked' : 'btn-ghost'}`}
+                            onClick={() => {
+                                if (user) {
+                                    handleLike();
+                                } else {
+                                    setAuthModalMessage('Inicia sesión o crea una cuenta para dar like a esta lista');
+                                }
+                            }}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={hasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            {Math.max(0, list.likesCount)}
+                        </button>
+                    </div>
                     </div>
                 </div>
             </header>
@@ -252,9 +257,12 @@ export default function PublicListView({ slug }: Props) {
                             </button>
                         </div>
                     ) : (
-                        <p class="login-prompt">
-                            <a href="/">Inicia sesión</a> para dejar un comentario
-                        </p>
+                        <button
+                            class="comment-login-cta"
+                            onClick={() => setAuthModalMessage('Inicia sesión o crea una cuenta para dejar un comentario')}
+                        >
+                            <span>Inicia sesión o regístrate para comentar</span>
+                        </button>
                     )}
 
                     <div class="comments-list">
@@ -277,6 +285,13 @@ export default function PublicListView({ slug }: Props) {
                 </section>
             </main>
 
+            {authModalMessage !== null && (
+                <AuthModal
+                    message={authModalMessage}
+                    onClose={() => setAuthModalMessage(null)}
+                />
+            )}
+
             <style>{`
                 .public-list-container {
                     min-height: 100vh;
@@ -290,9 +305,30 @@ export default function PublicListView({ slug }: Props) {
 
                 .list-header .container {
                     display: flex;
+                    flex-direction: column;
+                    gap: var(--space-4);
+                }
+
+                .list-back-link {
+                    display: inline-block;
+                    color: rgba(255, 255, 255, 0.85);
+                    text-decoration: none;
+                    font-size: 0.875rem;
+                    transition: color var(--transition-fast);
+                    align-self: flex-start;
+                }
+                .list-back-link:hover { color: white; }
+
+                .list-header-row {
+                    display: flex;
                     justify-content: space-between;
                     align-items: flex-start;
                     gap: var(--space-6);
+                }
+                @media (max-width: 600px) {
+                    .list-header-row {
+                        flex-direction: column;
+                    }
                 }
 
                 .list-info h1 {
@@ -431,6 +467,24 @@ export default function PublicListView({ slug }: Props) {
 
                 .login-prompt a {
                     color: var(--accent-primary);
+                }
+
+                .comment-login-cta {
+                    width: 100%;
+                    padding: var(--space-4);
+                    background: var(--bg-card);
+                    border: 1px dashed var(--border-color);
+                    border-radius: var(--border-radius-md);
+                    color: var(--accent-primary);
+                    font-weight: 500;
+                    font-size: 0.9375rem;
+                    cursor: pointer;
+                    margin-bottom: var(--space-6);
+                    transition: all var(--transition-fast);
+                }
+                .comment-login-cta:hover {
+                    border-color: var(--accent-primary);
+                    background: rgba(139, 92, 246, 0.06);
                 }
 
                 .comments-list {

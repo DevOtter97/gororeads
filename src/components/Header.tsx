@@ -136,13 +136,20 @@ export default function Header({ user, activeTab }: HeaderProps) {
                         ))}
                     </nav>
                     <div class="header-actions">
-                        {user && <NotificationBell userId={user.id} />}
-                        {user && <UserMenu user={user} onLogout={handleLogout} />}
+                        {user ? (
+                            <>
+                                <NotificationBell userId={user.id} />
+                                <UserMenu user={user} onLogout={handleLogout} />
+                            </>
+                        ) : (
+                            <a href="/" class="btn btn-primary btn-sm header-login-cta">Iniciar sesión</a>
+                        )}
                     </div>
                 </div>
             </header>
 
-            {/* Bottom nav: solo visible en mobile */}
+            {/* Bottom nav: solo visible en mobile y para usuarios autenticados */}
+            {user && (
             <nav class="bottom-nav" aria-label="Navegacion principal">
                 {NAV_ITEMS.map(item => (
                     <a
@@ -155,6 +162,7 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     </a>
                 ))}
             </nav>
+            )}
 
             <style>{`
                 .header {
