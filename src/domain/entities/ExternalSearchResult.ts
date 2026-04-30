@@ -1,7 +1,7 @@
 import type { ReadingCategory } from './Reading';
 
 /** Origen del resultado (para debug/UI). */
-export type ExternalSource = 'jikan' | 'openlibrary';
+export type ExternalSource = 'jikan' | 'anilist' | 'openlibrary';
 
 /**
  * Resultado normalizado de una busqueda en una API externa, listo para

@@ -71,9 +71,9 @@ export class JikanSearchService implements IExternalReadingSearchService {
 
         const res = await fetch(url, { signal });
         if (!res.ok) {
-            // Rate limit u otros — devolvemos vacio en silencio para no romper el UI
-            console.warn('[Jikan] Search failed:', res.status);
-            return [];
+            // Lanzamos para que el unified service pueda caer al fallback (AniList).
+            // No registramos warn aqui para evitar spam si Jikan esta caido durante minutos.
+            throw new Error(`Jikan ${res.status}`);
         }
         const json = await res.json() as JikanResponse;
 
