@@ -27,7 +27,7 @@ interface OpenLibraryResponse {
 export class OpenLibrarySearchService implements IExternalReadingSearchService {
     async search(query: string, category: ReadingCategory, signal?: AbortSignal): Promise<ExternalSearchResult[]> {
         if (category !== 'novel') return [];
-        if (query.trim().length < 2) return [];
+        if (query.trim().length < 1) return [];
 
         const params = new URLSearchParams({
             q: query.trim(),

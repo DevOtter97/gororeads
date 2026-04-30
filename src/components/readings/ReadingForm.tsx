@@ -49,13 +49,18 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     // elegir otro resultado distinto se sustituyan (no se acumulen) sin perder
     // los tags que el usuario haya añadido a mano.
     const [externalTags, setExternalTags] = useState<string[]>([]);
+    // Titulo del ultimo resultado seleccionado. Mientras el input coincida con
+    // este valor no se busca ni se muestra el dropdown (acabas de elegirlo). En
+    // cuanto el usuario teclea otra cosa, vuelve a funcionar normal.
+    const lastPickedTitleRef = useRef<string | null>(null);
     const searchAbortRef = useRef<AbortController | null>(null);
     const apiAvailable = ExternalReadingSearchService.hasApiFor(category);
 
-    // El dropdown se muestra cuando hay foco, hay API y al menos 1 char.
-    // Asi siempre damos feedback (buscando / sin resultados / error / lista).
     const trimmedTitle = title.trim();
-    const showDropdown = apiAvailable && titleFocused && trimmedTitle.length >= 1;
+    const justPicked = lastPickedTitleRef.current !== null && title === lastPickedTitleRef.current;
+    // El dropdown se muestra cuando hay foco, hay API, al menos 1 char y NO
+    // estamos mostrando un resultado recien elegido.
+    const showDropdown = apiAvailable && titleFocused && trimmedTitle.length >= 1 && !justPicked;
 
     // Debounce + fetch sugerencias cuando cambia titulo o categoria
     useEffect(() => {
@@ -63,6 +68,13 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             setSuggestions([]);
             setHasSearched(false);
             setSearchError(false);
+            setSearching(false);
+            return;
+        }
+        // Si el titulo coincide con la ultima seleccion, saltamos la busqueda
+        // (evita una request inutil que ademas reabriria el dropdown con el
+        // resultado que acabas de elegir).
+        if (justPicked) {
             setSearching(false);
             return;
         }
@@ -92,9 +104,12 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             }
         }, SEARCH_DEBOUNCE_MS);
         return () => window.clearTimeout(handler);
-    }, [title, category, apiAvailable, trimmedTitle]);
+    }, [title, category, apiAvailable, trimmedTitle, justPicked]);
 
     const applyExternalResult = (r: ExternalSearchResult) => {
+        // Marcamos antes de cambiar title para que el useEffect que se dispara
+        // por el setTitle vea la nueva referencia y salte la busqueda.
+        lastPickedTitleRef.current = r.title;
         setTitle(r.title);
         if (r.imageUrl) setImageUrl(r.imageUrl);
         if (r.totalChapters != null) setTotalChapters(String(r.totalChapters));
@@ -113,7 +128,11 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
 
         setSuggestions([]);
         setShowSearchModal(false);
-        setTitleFocused(false);
+        // Importante: NO tocamos titleFocused. El foco real sigue en el input
+        // (el onMouseDown(preventDefault) del item lo mantiene). Si lo pusieramos
+        // a false, al teclear despues no se reabriria el dropdown porque
+        // `showDropdown` lo requiere true y onFocus no se redispara mientras
+        // ya tienes foco.
     };
 
     const handleAddTag = () => {
