@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { authService } from '../infrastructure/firebase/FirebaseAuthService';
 import NotificationBell from './notifications/NotificationBell';
 import { getThemePref, setThemePref, type ThemePref } from '../utils/theme';
+import { useDropdown } from '../hooks/useDropdown';
 
 type Tab = 'home' | 'dashboard' | 'lists' | 'social' | 'settings';
 
@@ -87,9 +88,8 @@ const THEME_OPTIONS: { value: ThemePref; label: string; icon: preact.JSX.Element
 ];
 
 function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
-    const [open, setOpen] = useState(false);
+    const { open, toggle, wrapperRef } = useDropdown<HTMLDivElement>();
     const [theme, setTheme] = useState<ThemePref>('system');
-    const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setTheme(getThemePref());
@@ -100,31 +100,13 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
         setThemePref(next);
     };
 
-    useEffect(() => {
-        if (!open) return;
-        const handleClickOutside = (e: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setOpen(false);
-            }
-        };
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEsc);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEsc);
-        };
-    }, [open]);
-
     const initial = (user?.username || user?.displayName || user?.email || '?').charAt(0).toUpperCase();
 
     return (
         <div class="user-menu" ref={wrapperRef}>
             <button
                 class="user-menu-trigger"
-                onClick={() => setOpen(prev => !prev)}
+                onClick={toggle}
                 aria-label="Menu de usuario"
                 aria-expanded={open}
                 aria-haspopup="menu"
