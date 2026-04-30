@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import type { Post, PostRepostRef } from '../../domain/entities/Post';
 import type { User } from '../../domain/entities/User';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
+import { timeAgo } from '../../utils/timeAgo';
 import UserAvatar from '../UserAvatar';
 import PostActions from './PostActions';
 import CommentList from './CommentList';
@@ -15,18 +16,6 @@ interface Props {
     onDelete?: (postId: string) => void;
     onReposted?: (newRepost: Post) => void;
     onUnreposted?: (originalPostId: string) => void;
-}
-
-function timeAgo(date: Date): string {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'ahora';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `hace ${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `hace ${hours} h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `hace ${days} d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
 /** Render del contenido (text/image/reading/list) — usado tanto para post normal como para el embed del repost. */

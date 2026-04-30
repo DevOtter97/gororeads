@@ -11,6 +11,7 @@ import LoadingState from '../LoadingState';
 import UserAvatar from '../UserAvatar';
 import PostCard from '../home/PostCard';
 import CustomListCard from '../lists/CustomListCard';
+import { timeAgoCompact } from '../../utils/timeAgo';
 
 interface Props {
     username: string;
@@ -19,18 +20,6 @@ interface Props {
 type Tab = 'posts' | 'comments' | 'lists';
 
 const POSTS_PAGE_SIZE = 20;
-
-function timeAgoCompact(date: Date): string {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'ahora';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
 
 export default function PublicUserProfile({ username }: Props) {
     const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());

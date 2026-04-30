@@ -4,6 +4,7 @@ import { COMMENT_TEXT_MAX_LENGTH } from '../../domain/entities/Post';
 import type { User } from '../../domain/entities/User';
 import { postRepository } from '../../infrastructure/firebase/FirestorePostRepository';
 import { notificationRepository } from '../../infrastructure/firebase/FirestoreNotificationRepository';
+import { timeAgoCompact as timeAgo } from '../../utils/timeAgo';
 import UserAvatar from '../UserAvatar';
 
 interface Props {
@@ -36,18 +37,6 @@ function buildTree(comments: PostComment[]): CommentTree {
         }
     }
     return { roots, repliesByParent };
-}
-
-function timeAgo(date: Date): string {
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'ahora';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} h`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} d`;
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
 export default function CommentList({ post, currentUser, onCountChange }: Props) {
