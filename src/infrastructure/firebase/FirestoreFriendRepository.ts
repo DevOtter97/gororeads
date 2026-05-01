@@ -158,6 +158,57 @@ export class FirestoreFriendRepository implements IFriendRepository {
         await batch.commit();
     }
 
+    /**
+     * Borra TODAS las amistades del usuario (ambos lados) y todas las friend
+     * requests donde participa (como `fromUserId` o `toUserId`). Usado por el
+     * cascade de eliminacion de cuenta.
+     *
+     * Las reglas de Firestore permiten al user borrar:
+     * - `users/{me}/friends/X` (mi side, auth.uid == userId del path)
+     * - `users/{X}/friends/{me}` (su side, auth.uid == friendId del path)
+     * - `friend_requests/*` donde fromUserId == me OR toUserId == me
+     */
+    async deleteAllForUser(userId: string): Promise<void> {
+        const CHUNK = 500;
+
+        // 1. Friendships: leer mis amigos, borrar mi side y el suyo
+        const friendsRef = collection(db, `users/${userId}/friends`);
+        const friendsSnap = await getDocs(friendsRef);
+        const friendIds = friendsSnap.docs.map(d => d.id);
+
+        // Cada amistad son 2 docs -> max 250 amistades por batch
+        for (let i = 0; i < friendIds.length; i += CHUNK / 2) {
+            const batch = writeBatch(db);
+            for (const friendId of friendIds.slice(i, i + CHUNK / 2)) {
+                batch.delete(doc(db, `users/${userId}/friends/${friendId}`));
+                batch.delete(doc(db, `users/${friendId}/friends/${userId}`));
+            }
+            await batch.commit();
+        }
+
+        // 2. Friend requests: where fromUserId == me OR toUserId == me
+        // Firestore no soporta OR nativamente -> dos queries y deduplicamos
+        const reqRef = collection(db, 'friend_requests');
+        const [fromSnap, toSnap] = await Promise.all([
+            getDocs(query(reqRef, where('fromUserId', '==', userId))),
+            getDocs(query(reqRef, where('toUserId', '==', userId))),
+        ]);
+        const seen = new Set<string>();
+        const requestRefs: ReturnType<typeof doc>[] = [];
+        for (const docSnap of [...fromSnap.docs, ...toSnap.docs]) {
+            if (seen.has(docSnap.id)) continue;
+            seen.add(docSnap.id);
+            requestRefs.push(docSnap.ref);
+        }
+        for (let i = 0; i < requestRefs.length; i += CHUNK) {
+            const batch = writeBatch(db);
+            for (const ref of requestRefs.slice(i, i + CHUNK)) {
+                batch.delete(ref);
+            }
+            await batch.commit();
+        }
+    }
+
     async getFriends(userId: string): Promise<Friend[]> {
         const friendsRef = collection(db, `users/${userId}/friends`);
         const snapshot = await getDocs(friendsRef);

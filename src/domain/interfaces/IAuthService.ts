@@ -56,4 +56,17 @@ export interface IAuthService {
      * que el componente UI esta cacheando).
      */
     changeUsername(newUsername: string): Promise<Date>;
+
+    /**
+     * Elimina la cuenta del usuario actual: borra todos sus datos en Firestore
+     * (cascade) y luego borra el user de Firebase Auth. Tras esto el cliente
+     * queda sign-out automaticamente.
+     *
+     * Requiere re-auth con la contraseña actual antes de operar.
+     *
+     * Errores Firebase tipicos:
+     * - `auth/wrong-password` / `auth/invalid-credential`: re-auth fallido
+     * - `auth/requires-recent-login`: igual, pedir password de nuevo
+     */
+    deleteAccount(currentPassword: string): Promise<void>;
 }

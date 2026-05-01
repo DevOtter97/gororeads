@@ -15,6 +15,7 @@ import {
     increment,
     setDoc,
     runTransaction,
+    writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { getAuth } from 'firebase/auth';
@@ -126,6 +127,24 @@ export class FirestoreCustomListRepository implements ICustomListRepository {
     async delete(id: string): Promise<void> {
         const docRef = doc(db, COLLECTION_NAME, id);
         await deleteDoc(docRef);
+    }
+
+    /**
+     * Borra TODAS las listas del usuario en batches de 500. Usado por el
+     * cascade de eliminacion de cuenta. Subcollections (likes, comments)
+     * quedan huerfanas, igual que en delete() individual.
+     */
+    async deleteAllByUserId(userId: string): Promise<void> {
+        const q = query(this.collectionRef, where('userId', '==', userId));
+        const snap = await getDocs(q);
+        const CHUNK = 500;
+        for (let i = 0; i < snap.docs.length; i += CHUNK) {
+            const batch = writeBatch(db);
+            for (const docSnap of snap.docs.slice(i, i + CHUNK)) {
+                batch.delete(docSnap.ref);
+            }
+            await batch.commit();
+        }
     }
 
     async getById(id: string): Promise<CustomList | null> {

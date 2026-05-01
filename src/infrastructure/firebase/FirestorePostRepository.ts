@@ -13,6 +13,7 @@ import {
     Timestamp,
     runTransaction,
     increment,
+    writeBatch,
     type DocumentData,
     type QueryConstraint,
 } from 'firebase/firestore';
@@ -116,6 +117,27 @@ export class FirestorePostRepository implements IPostRepository {
 
     async delete(id: string): Promise<void> {
         await deleteDoc(doc(db, COLLECTION_NAME, id));
+    }
+
+    /**
+     * Borra TODOS los posts del usuario en batches de 500 (limite Firestore).
+     * Usado por el cascade de eliminacion de cuenta.
+     *
+     * Limitacion conocida: las subcollections (likes, comments, reposts) de
+     * cada post quedan huerfanas, igual que en delete() individual. Eliminar
+     * en cascada esas subcols requeriria Cloud Functions (out of scope).
+     */
+    async deleteAllByAuthor(authorId: string): Promise<void> {
+        const q = query(collection(db, COLLECTION_NAME), where('authorId', '==', authorId));
+        const snap = await getDocs(q);
+        const CHUNK = 500;
+        for (let i = 0; i < snap.docs.length; i += CHUNK) {
+            const batch = writeBatch(db);
+            for (const docSnap of snap.docs.slice(i, i + CHUNK)) {
+                batch.delete(docSnap.ref);
+            }
+            await batch.commit();
+        }
     }
 
     // ---------- Likes ----------
