@@ -7,7 +7,12 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "icons": "node scripts/generate-pwa-icons.mjs"
+    "icons": "node scripts/generate-pwa-icons.mjs",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
@@ -20,6 +25,13 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "sharp": "^0.34.5"
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/preact": "^3.2.4",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/ui": "^4.1.5",
+    "jsdom": "^29.1.1",
+    "sharp": "^0.34.5",
+    "vitest": "^4.1.5"
   }
 }

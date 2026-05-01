@@ -30,3 +30,8 @@ cors.json
 # Claude Code
 .claude/
 CLAUDE.md
+# Tests
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
