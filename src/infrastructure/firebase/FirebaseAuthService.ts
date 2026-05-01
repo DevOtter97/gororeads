@@ -162,6 +162,40 @@ export class FirebaseAuthService implements IAuthService {
         await updatePassword(firebaseUser, newPassword);
     }
 
+    async changeUsername(newUsername: string): Promise<Date> {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
+            throw new Error('No hay sesión activa');
+        }
+
+        // Necesitamos el username actual y el email para el batch del repo.
+        // Los leemos del propio FirebaseUser (displayName guarda el username
+        // y email es el del Auth, que es la fuente de verdad).
+        const oldUsername = firebaseUser.displayName;
+        const email = firebaseUser.email;
+        if (!oldUsername || !email) {
+            throw new Error('Perfil incompleto');
+        }
+
+        const changedAt = await userRepository.changeUsername(
+            firebaseUser.uid,
+            oldUsername,
+            newUsername,
+            email,
+        );
+
+        // Sync Auth displayName. Si esto falla despues del batch, el siguiente
+        // login ya tendria el username viejo en Auth pero el nuevo en Firestore.
+        // Logueamos pero no rollback porque deshacer el batch seria peor.
+        try {
+            await updateProfile(firebaseUser, { displayName: newUsername });
+        } catch (err) {
+            console.error('[Auth] Error syncing displayName after username change:', err);
+        }
+
+        return changedAt;
+    }
+
     getCurrentUser(): User | null {
         const firebaseUser = auth.currentUser;
         if (!firebaseUser) return null;

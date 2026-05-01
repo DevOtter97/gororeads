@@ -242,7 +242,11 @@ export default function UserProfile() {
                             </button>
                         </div>
                     </div>
-                    <AccountSecurityForm currentEmail={profile.email} />
+                    <AccountSecurityForm
+                        currentEmail={profile.email}
+                        currentUsername={profile.username}
+                        usernameChangedAt={profile.usernameChangedAt}
+                    />
                     </>
                 ) : (
                     <EmptyState description="No se pudo cargar el perfil" />

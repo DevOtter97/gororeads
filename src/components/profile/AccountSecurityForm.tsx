@@ -1,9 +1,14 @@
 import { useState } from 'preact/hooks';
 import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
+import UsernameChangeForm from './UsernameChangeForm';
 
 interface Props {
     /** Email actual del usuario, mostrado como referencia (no editable inline). */
     currentEmail: string;
+    /** Username actual; usado por el form de cambio de username. */
+    currentUsername: string;
+    /** Timestamp del ultimo cambio de username (para cooldown). */
+    usernameChangedAt?: Date;
 }
 
 type EmailState = {
@@ -31,7 +36,7 @@ type PasswordState = {
  * La uniqueness del email la enforza Firebase Auth (devuelve
  * `auth/email-already-in-use` si ya esta cogido). No hace falta check previo.
  */
-export default function AccountSecurityForm({ currentEmail }: Props) {
+export default function AccountSecurityForm({ currentEmail, currentUsername, usernameChangedAt }: Props) {
     // ─────────────────────────────── Email change ───────────────────────────────
     const [newEmail, setNewEmail] = useState('');
     const [emailPassword, setEmailPassword] = useState('');
@@ -125,6 +130,14 @@ export default function AccountSecurityForm({ currentEmail }: Props) {
     return (
         <section class="account-security">
             <h2 class="account-security-heading">Seguridad de la cuenta</h2>
+
+            {/* ────────────────── Cambio de username ────────────────── */}
+            <UsernameChangeForm
+                currentUsername={currentUsername}
+                lastChangedAt={usernameChangedAt}
+            />
+
+            <hr class="account-security-divider" />
 
             {/* ────────────────── Cambio de email ────────────────── */}
             <form class="account-security-form" onSubmit={handleEmailSubmit}>
