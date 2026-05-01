@@ -74,6 +74,12 @@ service cloud.firestore {
       allow read: if true;
       // Allow create if user is reserving for themselves
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow update if owner (para sincronizar el campo `email` cuando el
+      // usuario cambia su email via verifyBeforeUpdateEmail). El userId no se
+      // puede modificar — sigue ligando username -> uid.
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
       // Allow delete if owner (e.g. strict cleanup, though app doesn't implement delete yet)
       allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }

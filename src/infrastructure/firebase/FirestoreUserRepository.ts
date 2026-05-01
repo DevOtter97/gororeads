@@ -7,6 +7,7 @@ import {
     query,
     where,
     getDocs,
+    writeBatch,
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -94,5 +95,29 @@ export const userRepository = {
         if (data.age !== undefined) updateData.age = data.age;
         if (data.country !== undefined) updateData.country = data.country;
         await updateDoc(userRef, updateData);
+    },
+
+    /**
+     * Sincroniza el email en Firestore tras un cambio confirmado en Firebase Auth.
+     *
+     * Actualiza atomicamente:
+     * - `users/{userId}.email`
+     * - `usernames/{username}.email` (para que el login por username siga
+     *    resolviendo al email correcto)
+     *
+     * Llamado desde el listener `onAuthStateChanged` cuando el email del
+     * FirebaseUser difiere del guardado en Firestore — tipicamente justo
+     * despues de que el usuario haya pulsado el link de verifyBeforeUpdateEmail.
+     */
+    async updateUserEmail(userId: string, username: string, newEmail: string): Promise<void> {
+        const batch = writeBatch(db);
+        batch.update(doc(db, USERS_COLLECTION, userId), {
+            email: newEmail,
+            updatedAt: Timestamp.now(),
+        });
+        batch.update(doc(db, USERNAMES_COLLECTION, username.toLowerCase()), {
+            email: newEmail,
+        });
+        await batch.commit();
     }
 };
