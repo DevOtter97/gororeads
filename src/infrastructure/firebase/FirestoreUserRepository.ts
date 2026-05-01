@@ -8,6 +8,7 @@ import {
     where,
     getDocs,
     writeBatch,
+    limit,
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -63,6 +64,29 @@ export const userRepository = {
         if (!usernameSnap.exists()) return null;
         const userId = usernameSnap.data().userId as string;
         return this.getUserProfile(userId);
+    },
+
+    /**
+     * Devuelve el userId del primer usuario cuyo email coincide, o null.
+     *
+     * Pre-check para `requestEmailChange`: con Email Enumeration Protection
+     * activa en Firebase Auth, `verifyBeforeUpdateEmail` no lanza
+     * `auth/email-already-in-use` cuando el email ya existe (devuelve success
+     * silencioso para no filtrar info de cuentas existentes). Esta consulta
+     * Firestore cubre los usuarios que tienen perfil creado. Para usuarios
+     * con cuenta solo en Firebase Auth (Google sign-in que nunca completo el
+     * perfil) no hay forma de detectarlo client-side; ahi confiamos en que
+     * EEP esta apagada y Firebase Auth devuelve el error real.
+     *
+     * Nota: queries `where('email', '==', x)` en colecciones se permiten con
+     * la regla actual `users -> allow read: if auth != null` y no requieren
+     * indice compuesto (single-field se auto-indexa).
+     */
+    async findUserIdByEmail(email: string): Promise<string | null> {
+        const usersRef = collection(db, USERS_COLLECTION);
+        const q = query(usersRef, where('email', '==', email), limit(1));
+        const snap = await getDocs(q);
+        return snap.empty ? null : snap.docs[0].id;
     },
 
     async getUserProfile(userId: string): Promise<User | null> {
