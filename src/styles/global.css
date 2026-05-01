@@ -17,6 +17,12 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color-scheme: dark;
+    /* Mata el rubber-band del documento (tanto al hacer overscroll arriba como
+       abajo). Sin esto, el header sticky parece bajar al rebotar el body y la
+       bottom-nav fija parece levantarse. Aplicado en html (root) porque Safari
+       solo respeta el comportamiento del scroll raiz desde aqui.
+       Trade-off conocido: deshabilita pull-to-refresh en Safari/Chrome iOS. */
+    overscroll-behavior-y: none;
 }
 
 body {
@@ -26,10 +32,7 @@ body {
        reflows que mueven los position:fixed. Cae a 100vh donde no se entiende. */
     min-height: 100dvh;
     background: var(--bg-primary);
-    /* Detiene el rubber-band scroll de iOS Safari: cuando llegas al fondo y
-       sigues deslizando, el documento ya no rebota y la bottom-nav fija no
-       parece moverse. No rompe pull-to-refresh estandar. */
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
 }
 
 a {
