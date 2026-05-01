@@ -17,11 +17,22 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color-scheme: dark;
+    /* Mata el rubber-band del documento (tanto al hacer overscroll arriba como
+       abajo). Sin esto, el header sticky parece bajar al rebotar el body y la
+       bottom-nav fija parece levantarse. Aplicado en html (root) porque Safari
+       solo respeta el comportamiento del scroll raiz desde aqui.
+       Trade-off conocido: deshabilita pull-to-refresh en Safari/Chrome iOS. */
+    overscroll-behavior-y: none;
 }
 
 body {
     min-height: 100vh;
+    /* Override progresivo: en navegadores con soporte (iOS 15.4+, etc) el dvh
+       sigue al viewport real cuando la URL bar de Safari se colapsa, evitando
+       reflows que mueven los position:fixed. Cae a 100vh donde no se entiende. */
+    min-height: 100dvh;
     background: var(--bg-primary);
+    overscroll-behavior-y: none;
 }
 
 a {
@@ -562,6 +573,7 @@ textarea {
 /* Page Layout */
 .page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
@@ -595,6 +607,7 @@ textarea {
 /* Auth Pages */
 .auth-page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
