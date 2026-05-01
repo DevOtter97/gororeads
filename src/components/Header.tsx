@@ -427,6 +427,10 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0));
                     z-index: 100;
                     backdrop-filter: blur(8px);
+                    /* Fuerza una capa de composicion propia para que iOS Safari
+                       no la repinte cuando la URL bar se colapsa o el documento
+                       hace rubber-band: la nav queda perfectamente anclada. */
+                    transform: translateZ(0);
                 }
                 .bottom-nav-item {
                     flex: 1;

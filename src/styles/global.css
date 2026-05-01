@@ -21,7 +21,15 @@ html {
 
 body {
     min-height: 100vh;
+    /* Override progresivo: en navegadores con soporte (iOS 15.4+, etc) el dvh
+       sigue al viewport real cuando la URL bar de Safari se colapsa, evitando
+       reflows que mueven los position:fixed. Cae a 100vh donde no se entiende. */
+    min-height: 100dvh;
     background: var(--bg-primary);
+    /* Detiene el rubber-band scroll de iOS Safari: cuando llegas al fondo y
+       sigues deslizando, el documento ya no rebota y la bottom-nav fija no
+       parece moverse. No rompe pull-to-refresh estandar. */
+    overscroll-behavior-y: contain;
 }
 
 a {
@@ -562,6 +570,7 @@ textarea {
 /* Page Layout */
 .page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
@@ -595,6 +604,7 @@ textarea {
 /* Auth Pages */
 .auth-page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
