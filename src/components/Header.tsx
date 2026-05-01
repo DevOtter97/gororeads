@@ -181,6 +181,38 @@ export default function Header({ user, activeTab }: HeaderProps) {
         window.location.href = '/';
     };
 
+    /**
+     * iOS Safari: position:fixed bottom:0 ancla al layout viewport, no al
+     * visual viewport. Cuando la URL bar de Safari se colapsa al scrollear (o
+     * cuando el teclado virtual sube), la bottom-nav aparece "despegada" con
+     * un hueco entre la nav y el bottom real de la pantalla.
+     *
+     * Fix: leer en cada cambio del visual viewport el offset entre layout y
+     * visual, y exponerlo como variable CSS --viewport-bottom-offset. La
+     * .bottom-nav y el body lo consumen para mantenerse glued al bottom
+     * visible siempre.
+     */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.visualViewport) return;
+        const vv = window.visualViewport;
+        const root = document.documentElement;
+
+        const update = () => {
+            // Distancia entre el bottom del visual viewport y el del layout.
+            // > 0 cuando el visual es mas corto (URL bar visible, teclado abierto).
+            const gap = window.innerHeight - vv.height - vv.offsetTop;
+            root.style.setProperty('--viewport-bottom-offset', `${Math.max(0, gap)}px`);
+        };
+
+        update();
+        vv.addEventListener('resize', update);
+        vv.addEventListener('scroll', update);
+        return () => {
+            vv.removeEventListener('resize', update);
+            vv.removeEventListener('scroll', update);
+        };
+    }, []);
+
     return (
         <>
             <header class="header">
@@ -418,7 +450,13 @@ export default function Header({ user, activeTab }: HeaderProps) {
                 .bottom-nav {
                     display: flex;
                     position: fixed;
-                    bottom: 0;
+                    /* En iOS Safari, layout viewport != visual viewport cuando
+                       la URL bar se colapsa o el teclado se abre. El useEffect
+                       de arriba escribe --viewport-bottom-offset con la
+                       diferencia, y aqui la consumimos para mantener la nav
+                       siempre pegada al bottom visible. Cae a 0 en navegadores
+                       donde no hace falta compensar. */
+                    bottom: var(--viewport-bottom-offset, 0);
                     left: 0;
                     right: 0;
                     background: var(--bg-secondary);
@@ -453,9 +491,12 @@ export default function Header({ user, activeTab }: HeaderProps) {
                     line-height: 1;
                 }
 
-                /* Espacio para que el bottom-nav no tape contenido en mobile */
+                /* Espacio para que el bottom-nav no tape contenido en mobile.
+                   Suma --viewport-bottom-offset para que cuando la nav se eleva
+                   (iOS Safari URL bar colapsando), el contenido tambien se
+                   reserve mas espacio abajo y nunca quede detras de la nav. */
                 body {
-                    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0));
+                    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0) + var(--viewport-bottom-offset, 0px));
                 }
 
                 /* Desktop: header inline + sin bottom nav */
