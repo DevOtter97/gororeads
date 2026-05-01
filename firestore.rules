@@ -43,7 +43,24 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Create permitido para el owner (registro de cuenta).
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Update: el owner puede cambiar cualquier campo, EXCEPTO el username
+      // que tiene cooldown de 30 dias. Si username no cambia, sin restriccion.
+      // Si username cambia, debe ser el primer cambio (no hay
+      // usernameChangedAt previo) o haber pasado el cooldown.
+      allow update: if request.auth != null && request.auth.uid == userId
+        && (
+          !('username' in request.resource.data) ||
+          request.resource.data.username == resource.data.username ||
+          !('usernameChangedAt' in resource.data) ||
+          request.time > resource.data.usernameChangedAt + duration.value(30, 'd')
+        );
+
+      // Delete: no permitido. Eliminar cuenta requeriria cascade (lecturas,
+      // posts, listas, amistades) -> Cloud Function. Out of scope.
 
       // Friends subcollection
       match /friends/{friendId} {

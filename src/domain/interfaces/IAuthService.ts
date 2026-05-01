@@ -41,4 +41,19 @@ export interface IAuthService {
      * - `auth/requires-recent-login`: re-auth necesaria
      */
     changePassword(newPassword: string): Promise<void>;
+
+    /**
+     * Cambia el username del usuario en Firestore (atomico) y sincroniza el
+     * `displayName` en Firebase Auth.
+     *
+     * Errores que puede lanzar:
+     * - 'username-taken': otro usuario ya tiene ese username
+     * - 'cooldown-active': dentro del cooldown de cambio (30 dias)
+     * - El batch de Firestore puede fallar con permission-denied si las reglas
+     *   detectan violacion del cooldown server-side.
+     *
+     * Devuelve el timestamp del cambio (para refrescar el `usernameChangedAt`
+     * que el componente UI esta cacheando).
+     */
+    changeUsername(newUsername: string): Promise<Date>;
 }
