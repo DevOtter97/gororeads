@@ -151,7 +151,18 @@ export class FirebaseAuthService implements IAuthService {
         if (!firebaseUser) {
             throw new Error('No hay sesión activa');
         }
-        await verifyBeforeUpdateEmail(firebaseUser, newEmail.trim());
+        const trimmed = newEmail.trim();
+
+        // Pre-check Firestore: si el email ya esta en uso por otro usuario CON
+        // perfil completo, fail-fast con mensaje claro. Necesario porque
+        // Firebase Auth con Email Enumeration Protection no lanza error en
+        // este caso — devuelve success silencioso sin enviar el mail.
+        const existingUserId = await userRepository.findUserIdByEmail(trimmed);
+        if (existingUserId && existingUserId !== firebaseUser.uid) {
+            throw new Error('email-taken');
+        }
+
+        await verifyBeforeUpdateEmail(firebaseUser, trimmed);
     }
 
     async changePassword(newPassword: string): Promise<void> {

@@ -71,7 +71,11 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
             const message = (err as { message?: string }).message;
 
             let display = 'Error al cambiar el email';
-            if (code === 'auth/email-already-in-use') display = 'Ese email ya está en uso por otra cuenta';
+            // 'email-taken' lo lanzamos desde authService.requestEmailChange tras
+            // el pre-check Firestore (cubre el caso en que Firebase Auth EEP
+            // silencia 'auth/email-already-in-use'). El segundo cubre cuando EEP
+            // esta off o el email es de un user sin perfil Firestore.
+            if (message === 'email-taken' || code === 'auth/email-already-in-use') display = 'Ese email ya está en uso por otra cuenta';
             else if (code === 'auth/invalid-email') display = 'Email no válido';
             else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') display = 'Contraseña actual incorrecta';
             else if (code === 'auth/too-many-requests') display = 'Demasiados intentos, prueba más tarde';
