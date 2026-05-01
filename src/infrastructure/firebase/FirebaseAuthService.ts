@@ -6,7 +6,11 @@ import {
     type User as FirebaseUser,
     GoogleAuthProvider,
     OAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    verifyBeforeUpdateEmail,
+    updatePassword,
 } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { updateProfile } from 'firebase/auth'; // Import updateProfile
@@ -133,6 +137,31 @@ export class FirebaseAuthService implements IAuthService {
         await signOut(auth);
     }
 
+    async reauthenticate(currentPassword: string): Promise<void> {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser || !firebaseUser.email) {
+            throw new Error('No hay sesión activa');
+        }
+        const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
+        await reauthenticateWithCredential(firebaseUser, credential);
+    }
+
+    async requestEmailChange(newEmail: string): Promise<void> {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
+            throw new Error('No hay sesión activa');
+        }
+        await verifyBeforeUpdateEmail(firebaseUser, newEmail.trim());
+    }
+
+    async changePassword(newPassword: string): Promise<void> {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
+            throw new Error('No hay sesión activa');
+        }
+        await updatePassword(firebaseUser, newPassword);
+    }
+
     getCurrentUser(): User | null {
         const firebaseUser = auth.currentUser;
         if (!firebaseUser) return null;
@@ -152,8 +181,24 @@ export class FirebaseAuthService implements IAuthService {
             callback(mapFirebaseUser(firebaseUser));
 
             userRepository.getUserProfile(firebaseUser.uid)
-                .then((userProfile) => {
-                    if (userProfile) callback(userProfile);
+                .then(async (userProfile) => {
+                    if (!userProfile) return;
+
+                    // Sincroniza Firestore con Firebase Auth si el email ha
+                    // cambiado (tipicamente tras confirmar verifyBeforeUpdateEmail
+                    // desde el link del mail). Una vez sincronizado, emitimos el
+                    // perfil con el email actualizado para que la UI lo refleje.
+                    const fbEmail = firebaseUser.email || '';
+                    if (fbEmail && userProfile.email !== fbEmail && userProfile.username) {
+                        try {
+                            await userRepository.updateUserEmail(userProfile.id, userProfile.username, fbEmail);
+                            userProfile = { ...userProfile, email: fbEmail };
+                        } catch (err) {
+                            console.error('[Auth] Error syncing email to Firestore:', err);
+                        }
+                    }
+
+                    callback(userProfile);
                 })
                 .catch((error) => {
                     console.error('[Auth] Error fetching user profile:', error);

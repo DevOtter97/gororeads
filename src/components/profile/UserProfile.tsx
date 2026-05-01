@@ -7,6 +7,7 @@ import Header from '../Header';
 import EmptyState from '../EmptyState';
 import type { User } from '../../domain/entities/User';
 import ImageCropperModal from './ImageCropperModal';
+import AccountSecurityForm from './AccountSecurityForm';
 
 export default function UserProfile() {
     const { user } = useAuth({ redirectIfUnauthenticated: '/' });
@@ -164,6 +165,7 @@ export default function UserProfile() {
                         <span>Cargando perfil...</span>
                     </div>
                 ) : profile ? (
+                    <>
                     <div class="profile-card">
                         <div class="avatar-section" onClick={handleAvatarClick}>
                             {avatarSrc ? (
@@ -240,6 +242,8 @@ export default function UserProfile() {
                             </button>
                         </div>
                     </div>
+                    <AccountSecurityForm currentEmail={profile.email} />
+                    </>
                 ) : (
                     <EmptyState description="No se pudo cargar el perfil" />
                 )}
