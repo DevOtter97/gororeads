@@ -1,0 +1,115 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela runs antiguos del mismo PR si llegan nuevos commits — evita
+# desperdiciar minutos de Actions cuando se hacen varios pushes seguidos.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: '22'
+  # Valores dummy para que el SDK de Firebase inicialice sin throw en CI.
+  # Los tests e2e solo cubren flujos sin auth (login form, redirects), no
+  # hacen peticiones reales a Firebase, asi que los valores no importan.
+  PUBLIC_FIREBASE_API_KEY: ci-dummy
+  PUBLIC_FIREBASE_AUTH_DOMAIN: ci.firebaseapp.com
+  PUBLIC_FIREBASE_PROJECT_ID: ci-dummy
+  PUBLIC_FIREBASE_STORAGE_BUCKET: ci.appspot.com
+  PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '0'
+  PUBLIC_FIREBASE_APP_ID: ci-dummy
+
+jobs:
+  unit:
+    name: Unit & component tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit & component tests
+        run: npm run test:run
+
+  e2e:
+    name: E2E tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cache de los browsers de Playwright keyado por la version del paquete.
+      # Evita re-descargar Chromium (~90 MB) en cada run cuando no cambia la
+      # version. Si el cache cae el step de install lo regenera.
+      - name: Get Playwright version
+        id: pw-version
+        run: |
+          version=$(node -p "require('./package.json').devDependencies['@playwright/test']")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # Si el cache acerto, los binarios estan, pero las system deps de Linux
+      # (libnss3, etc.) no se cachean — hay que reinstalarlas igual.
+      - name: Install Playwright system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      # Sube el report HTML solo cuando algo falla, para poder inspeccionar
+      # screenshots/traces sin generar artifacts en cada run verde.
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Astro build
+        run: npm run build
