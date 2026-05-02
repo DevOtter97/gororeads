@@ -147,16 +147,16 @@ export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Readon
     // Global event listeners for drag
     useEffect(() => {
         if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-            window.addEventListener('touchmove', handleMouseMove);
-            window.addEventListener('touchend', handleMouseUp);
+            globalThis.addEventListener('mousemove', handleMouseMove);
+            globalThis.addEventListener('mouseup', handleMouseUp);
+            globalThis.addEventListener('touchmove', handleMouseMove);
+            globalThis.addEventListener('touchend', handleMouseUp);
         }
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('touchmove', handleMouseMove);
-            window.removeEventListener('touchend', handleMouseUp);
+            globalThis.removeEventListener('mousemove', handleMouseMove);
+            globalThis.removeEventListener('mouseup', handleMouseUp);
+            globalThis.removeEventListener('touchmove', handleMouseMove);
+            globalThis.removeEventListener('touchend', handleMouseUp);
         };
     }, [isDragging, dragStart, zoom]);
 
@@ -172,8 +172,8 @@ export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Readon
             // Actually, if we resize and container gets smaller, fitScale changes.
             // React state update might lag slightly behind layout, but resize event fires often.
         };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        globalThis.addEventListener('resize', handleResize);
+        return () => globalThis.removeEventListener('resize', handleResize);
     }, [calculateMinZoom]);
 
 
@@ -250,7 +250,7 @@ export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Readon
                             step="0.01"
                             value={zoom}
                             onInput={(e) => {
-                                const newZoom = parseFloat((e.target as HTMLInputElement).value);
+                                const newZoom = Number.parseFloat((e.target as HTMLInputElement).value);
                                 setZoom(newZoom);
                                 const { maxOffsetX, maxOffsetY } = getConstraints(newZoom);
                                 setOffset(prev => ({

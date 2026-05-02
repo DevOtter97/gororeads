@@ -46,7 +46,7 @@ export default function RegisterForm({ onSuccess }: Readonly<Props>) {
         if (onSuccess) {
             onSuccess();
         } else {
-            window.location.href = '/';
+            globalThis.location.href = '/';
         }
     };
 
@@ -64,7 +64,7 @@ export default function RegisterForm({ onSuccess }: Readonly<Props>) {
             return;
         }
 
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        if (!/^\w+$/.test(username)) {
             setError('El nombre de usuario solo puede contener letras, números y guiones bajos');
             return;
         }

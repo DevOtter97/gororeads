@@ -81,7 +81,7 @@ export default function PostDetailView({ postId }: Readonly<Props>) {
                     currentUser={user}
                     initialLiked={liked}
                     initialReposted={reposted}
-                    onDelete={() => { window.location.href = '/'; }}
+                    onDelete={() => { globalThis.location.href = '/'; }}
                 />
             </main>
             <style>{`

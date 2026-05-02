@@ -44,7 +44,7 @@ export default function LoginForm({ onSuccess }: Readonly<Props>) {
         if (onSuccess) {
             onSuccess();
         } else {
-            window.location.href = '/';
+            globalThis.location.href = '/';
         }
     };
 

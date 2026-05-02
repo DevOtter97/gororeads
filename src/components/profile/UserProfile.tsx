@@ -112,8 +112,8 @@ export default function UserProfile() {
                 photoURL = await getDownloadURL(storageRef);
             }
 
-            const ageNum = age.trim() ? parseInt(age, 10) : undefined;
-            if (age.trim() && (isNaN(ageNum!) || ageNum! < 1 || ageNum! > 150)) {
+            const ageNum = age.trim() ? Number.parseInt(age, 10) : undefined;
+            if (ageNum !== undefined && (Number.isNaN(ageNum) || ageNum < 1 || ageNum > 150)) {
                 setError('Edad no valida');
                 setSaving(false);
                 return;

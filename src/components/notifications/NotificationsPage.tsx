@@ -40,7 +40,7 @@ export default function NotificationsPage() {
             setUnreadCount(c => Math.max(0, c - 1));
         }
         const target = resolveNotificationTarget(n);
-        if (target) window.location.href = target;
+        if (target) globalThis.location.href = target;
     };
 
     const handleMarkAllAsRead = async () => {

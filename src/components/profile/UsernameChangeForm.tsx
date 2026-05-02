@@ -49,7 +49,7 @@ export default function UsernameChangeForm({ currentUsername, lastChangedAt }: R
             setError('El username debe tener al menos 6 caracteres');
             return;
         }
-        if (!/^[a-zA-Z0-9_]+$/.test(candidate)) {
+        if (!/^\w+$/.test(candidate)) {
             setError('Solo letras, números y guiones bajos');
             return;
         }

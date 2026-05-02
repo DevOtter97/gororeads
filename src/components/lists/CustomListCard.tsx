@@ -51,7 +51,7 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
 
     const copyLink = async (e: Event) => {
         e.stopPropagation();
-        const url = `${window.location.origin}/list/${list.slug}`;
+        const url = `${globalThis.location.origin}/list/${list.slug}`;
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

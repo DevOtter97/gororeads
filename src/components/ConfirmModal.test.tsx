@@ -56,15 +56,15 @@ describe('<ConfirmModal />', () => {
 
     it('click en el overlay llama onCancel', () => {
         const { onCancel, container } = setup();
-        const overlay = container.querySelector('.modal-overlay');
-        fireEvent.click(overlay!);
+        const overlay = container.querySelector('.modal-overlay')!;
+        fireEvent.click(overlay);
         expect(onCancel).toHaveBeenCalledOnce();
     });
 
     it('click en el modal NO llama onCancel (stopPropagation)', () => {
         const { onCancel, container } = setup();
-        const modal = container.querySelector('.modal');
-        fireEvent.click(modal!);
+        const modal = container.querySelector('.modal')!;
+        fireEvent.click(modal);
         expect(onCancel).not.toHaveBeenCalled();
     });
 
@@ -83,8 +83,8 @@ describe('<ConfirmModal />', () => {
 
     it('cuando loading=true, click en overlay NO llama onCancel', () => {
         const { onCancel, container } = setup({ loading: true });
-        const overlay = container.querySelector('.modal-overlay');
-        fireEvent.click(overlay!);
+        const overlay = container.querySelector('.modal-overlay')!;
+        fireEvent.click(overlay);
         expect(onCancel).not.toHaveBeenCalled();
     });
 

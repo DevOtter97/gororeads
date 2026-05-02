@@ -14,9 +14,9 @@ export default function MyProfileRedirect() {
     useEffect(() => {
         if (!authResolved) return;
         if (!user) {
-            window.location.replace('/');
+            globalThis.location.replace('/');
         } else {
-            window.location.replace(`/profile/${user.username}`);
+            globalThis.location.replace(`/profile/${user.username}`);
         }
     }, [user, authResolved]);
 

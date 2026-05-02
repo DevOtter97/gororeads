@@ -20,10 +20,10 @@ interface Props {
 }
 
 /** Render del contenido (text/image/reading/list) — usado tanto para post normal como para el embed del repost. */
-function PostContent({ source, onImageClick }: {
+function PostContent({ source, onImageClick }: Readonly<{
     source: Pick<Post, 'type' | 'text' | 'imageUrl' | 'readingRef' | 'listRef'> | PostRepostRef;
     onImageClick?: () => void;
-}) {
+}>) {
     return (
         <>
             {source.text && <p class="post-text">{source.text}</p>}

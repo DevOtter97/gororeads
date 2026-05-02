@@ -63,7 +63,7 @@ export default function ListManager() {
     };
 
     const handleView = (list: CustomList) => {
-        window.location.href = `/list/${list.slug}`;
+        globalThis.location.href = `/list/${list.slug}`;
     };
 
     if (loading) {

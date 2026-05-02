@@ -71,11 +71,12 @@ export default function HomeFeed() {
         // El nuevo post repost aparece en el feed (somos su autor) + actualizamos
         // el estado reposted del original.
         setPosts(prev => [newRepost, ...prev]);
-        if (newRepost.repostOf) {
-            setRepostedIds(prev => new Set(prev).add(newRepost.repostOf!.postId));
+        const repostOf = newRepost.repostOf;
+        if (repostOf) {
+            setRepostedIds(prev => new Set(prev).add(repostOf.postId));
             // El contador del original puede estar visible en otra card del feed.
             setPosts(prev => prev.map(p =>
-                p.id === newRepost.repostOf!.postId
+                p.id === repostOf.postId
                     ? { ...p, repostsCount: p.repostsCount + 1 }
                     : p
             ));

@@ -12,7 +12,7 @@ import { getThemePref, setThemePref } from './theme';
  */
 describe('theme preferences', () => {
     beforeEach(() => {
-        window.localStorage.clear();
+        globalThis.localStorage.clear();
         delete document.documentElement.dataset.theme;
     });
 
@@ -22,17 +22,17 @@ describe('theme preferences', () => {
         });
 
         it('devuelve "light" si esta guardado', () => {
-            window.localStorage.setItem('theme', 'light');
+            globalThis.localStorage.setItem('theme', 'light');
             expect(getThemePref()).toBe('light');
         });
 
         it('devuelve "dark" si esta guardado', () => {
-            window.localStorage.setItem('theme', 'dark');
+            globalThis.localStorage.setItem('theme', 'dark');
             expect(getThemePref()).toBe('dark');
         });
 
         it('cae a "system" si el valor guardado es invalido', () => {
-            window.localStorage.setItem('theme', 'invalido');
+            globalThis.localStorage.setItem('theme', 'invalido');
             expect(getThemePref()).toBe('system');
         });
     });
@@ -40,25 +40,25 @@ describe('theme preferences', () => {
     describe('setThemePref', () => {
         it('setear "light" guarda en localStorage y aplica data-theme', () => {
             setThemePref('light');
-            expect(window.localStorage.getItem('theme')).toBe('light');
+            expect(globalThis.localStorage.getItem('theme')).toBe('light');
             expect(document.documentElement.dataset.theme).toBe('light');
         });
 
         it('setear "dark" guarda en localStorage y aplica data-theme', () => {
             setThemePref('dark');
-            expect(window.localStorage.getItem('theme')).toBe('dark');
+            expect(globalThis.localStorage.getItem('theme')).toBe('dark');
             expect(document.documentElement.dataset.theme).toBe('dark');
         });
 
         it('setear "system" borra el valor guardado y limpia data-theme', () => {
             // Primero ponemos algo concreto
             setThemePref('dark');
-            expect(window.localStorage.getItem('theme')).toBe('dark');
+            expect(globalThis.localStorage.getItem('theme')).toBe('dark');
             expect(document.documentElement.dataset.theme).toBe('dark');
 
             // Y ahora pasamos a system
             setThemePref('system');
-            expect(window.localStorage.getItem('theme')).toBeNull();
+            expect(globalThis.localStorage.getItem('theme')).toBeNull();
             expect(document.documentElement.dataset.theme).toBeUndefined();
         });
     });

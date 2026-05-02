@@ -69,12 +69,12 @@ export default function PublicUserProfile({ username }: Readonly<Props>) {
 
     // Honra ?tab=... y #lists para deeplinks
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const params = new URLSearchParams(window.location.search);
+        if (typeof globalThis.window === 'undefined') return;
+        const params = new URLSearchParams(globalThis.location.search);
         const t = params.get('tab');
         if (t === 'comments' || t === 'lists' || t === 'posts') {
             setActiveTab(t);
-        } else if (window.location.hash === '#lists') {
+        } else if (globalThis.location.hash === '#lists') {
             setActiveTab('lists');
         }
     }, []);

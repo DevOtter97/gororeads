@@ -89,7 +89,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
         setSearching(true);
         setSearchError(false);
 
-        const handler = window.setTimeout(async () => {
+        const handler = globalThis.setTimeout(async () => {
             searchAbortRef.current?.abort();
             const controller = new AbortController();
             searchAbortRef.current = controller;
@@ -110,7 +110,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
                 if (!controller.signal.aborted) setSearching(false);
             }
         }, SEARCH_DEBOUNCE_MS);
-        return () => window.clearTimeout(handler);
+        return () => globalThis.clearTimeout(handler);
     }, [title, category, apiAvailable, trimmedTitle, justPicked]);
 
     const applyExternalResult = (r: ExternalSearchResult) => {
@@ -180,8 +180,8 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
                 status,
                 measureUnit,
                 tags,
-                currentChapter: currentChapter ? parseInt(currentChapter, 10) : undefined,
-                totalChapters: totalChapters ? parseInt(totalChapters, 10) : undefined,
+                currentChapter: currentChapter ? Number.parseInt(currentChapter, 10) : undefined,
+                totalChapters: totalChapters ? Number.parseInt(totalChapters, 10) : undefined,
                 notes: notes.trim() || undefined,
                 referenceUrl: url.trim() || undefined,
                 startedAt: startedAt ? new Date(startedAt) : undefined,
@@ -212,7 +212,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
                         onFocus={() => setTitleFocused(true)}
                         onBlur={() => {
                             // Pequeño delay para permitir click en sugerencia antes de cerrar
-                            window.setTimeout(() => setTitleFocused(false), 150);
+                            globalThis.setTimeout(() => setTitleFocused(false), 150);
                         }}
                         required
                         disabled={loading}

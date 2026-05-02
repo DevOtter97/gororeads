@@ -104,7 +104,7 @@ export class FirestorePostRepository implements IPostRepository {
             .slice(0, pageSize);
 
         const nextCursor = merged.length === pageSize
-            ? merged[merged.length - 1].createdAt
+            ? merged.at(-1)!.createdAt
             : null;
 
         return { posts: merged, nextCursor };

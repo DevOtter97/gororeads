@@ -26,7 +26,7 @@ export default function ListHero({
     const [linkCopied, setLinkCopied] = useState(false);
 
     const copyLink = async () => {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(globalThis.location.href);
         setLinkCopied(true);
         setTimeout(() => setLinkCopied(false), 2000);
     };
