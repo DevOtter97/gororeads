@@ -99,6 +99,27 @@ export class FirestoreNotificationRepository implements INotificationRepository 
         await batch.commit();
     }
 
+    /**
+     * Borra TODAS las notificaciones recibidas por el usuario (`userId == X`)
+     * en batches de 500. Usado por el cascade de eliminacion de cuenta. Las
+     * notificaciones que el usuario haya GENERADO en bandejas ajenas (campo
+     * fromUserId) NO se borran porque las reglas no lo permiten — quedan
+     * huerfanas con el username viejo.
+     */
+    async deleteAllByUserId(userId: string): Promise<void> {
+        const notificationsRef = collection(db, 'notifications');
+        const q = query(notificationsRef, where('userId', '==', userId));
+        const snap = await getDocs(q);
+        const CHUNK = 500;
+        for (let i = 0; i < snap.docs.length; i += CHUNK) {
+            const batch = writeBatch(db);
+            for (const docSnap of snap.docs.slice(i, i + CHUNK)) {
+                batch.delete(docSnap.ref);
+            }
+            await batch.commit();
+        }
+    }
+
     onUnreadCountChanged(userId: string, callback: (count: number) => void): () => void {
         const notificationsRef = collection(db, 'notifications');
         const q = query(

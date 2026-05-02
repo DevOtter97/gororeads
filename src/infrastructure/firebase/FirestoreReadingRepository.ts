@@ -10,6 +10,7 @@ import {
     where,
     orderBy,
     Timestamp,
+    writeBatch,
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import type { IReadingRepository, ReadingFilters } from '../../domain/interfaces/IReadingRepository';
@@ -109,6 +110,23 @@ export class FirestoreReadingRepository implements IReadingRepository {
     async delete(id: string): Promise<void> {
         const docRef = doc(db, COLLECTION_NAME, id);
         await deleteDoc(docRef);
+    }
+
+    /**
+     * Borra TODAS las lecturas del usuario en batches de 500. Usado por el
+     * cascade de eliminacion de cuenta.
+     */
+    async deleteAllByUserId(userId: string): Promise<void> {
+        const q = query(this.collectionRef, where('userId', '==', userId));
+        const snap = await getDocs(q);
+        const CHUNK = 500;
+        for (let i = 0; i < snap.docs.length; i += CHUNK) {
+            const batch = writeBatch(db);
+            for (const docSnap of snap.docs.slice(i, i + CHUNK)) {
+                batch.delete(docSnap.ref);
+            }
+            await batch.commit();
+        }
     }
 
     async getById(id: string): Promise<Reading | null> {

@@ -4,6 +4,7 @@ import {
     getDoc,
     setDoc,
     updateDoc,
+    deleteDoc,
     query,
     where,
     getDocs,
@@ -13,6 +14,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { USERNAME_CHANGE_COOLDOWN_MS, type User } from '../../domain/entities/User';
+import { postRepository } from './FirestorePostRepository';
+import { readingRepository } from './FirestoreReadingRepository';
+import { customListRepository } from './FirestoreCustomListRepository';
+import { notificationRepository } from './FirestoreNotificationRepository';
+import { friendRepository } from './FirestoreFriendRepository';
 
 const USERS_COLLECTION = 'users';
 const USERNAMES_COLLECTION = 'usernames';
@@ -182,6 +188,49 @@ export const userRepository = {
         await batch.commit();
 
         return now.toDate();
+    },
+
+    /**
+     * Cascade delete de TODOS los datos Firestore del usuario, en orden:
+     *
+     * 1. Posts del autor (subcols likes/comments/reposts quedan huerfanas)
+     * 2. Lecturas del usuario
+     * 3. Listas del usuario (subcols likes/comments huerfanas)
+     * 4. Notificaciones recibidas
+     * 5. Friend requests + amistades bidireccionales
+     * 6. `usernames/{username}` (libera el username para reutilizar)
+     * 7. `users/{userId}` (al final — algunos componentes en la app pueden
+     *    estar leyendo este doc; borrarlo antes podria causar errores en UI
+     *    intermedios mientras corren los pasos anteriores)
+     *
+     * El user de Firebase Auth se borra DESPUES de este metodo, en
+     * authService.deleteAccount, porque al hacerlo se invalida el token y los
+     * pasos siguientes fallarian con permission-denied.
+     *
+     * Limitaciones (consistentes con el resto del proyecto):
+     * - Subcollections (likes/comments/reposts de posts y listas) no se
+     *   borran. Quedan huerfanas. Esto es lo mismo que ya pasa al borrar un
+     *   post individual.
+     * - Notificaciones que el usuario haya GENERADO en bandejas ajenas
+     *   (campo fromUserId) no se pueden borrar porque las reglas restringen
+     *   delete al recipient. Quedan con el username viejo.
+     * - Posts/comments hechos por el user que SE GUARDAN como snapshot en
+     *   otros docs (ej. authorUsername denormalizado en posts ajenos via
+     *   repostOf) siguen mostrando el username viejo. Es deliberado para
+     *   sobrevivir a borrados.
+     */
+    async cascadeDeleteUserData(userId: string, username: string): Promise<void> {
+        await postRepository.deleteAllByAuthor(userId);
+        await readingRepository.deleteAllByUserId(userId);
+        await customListRepository.deleteAllByUserId(userId);
+        await notificationRepository.deleteAllByUserId(userId);
+        await friendRepository.deleteAllForUser(userId);
+
+        // Username reservation
+        await deleteDoc(doc(db, USERNAMES_COLLECTION, username.toLowerCase()));
+
+        // User profile (siempre el ultimo paso de Firestore)
+        await deleteDoc(doc(db, USERS_COLLECTION, userId));
     },
 
     /**

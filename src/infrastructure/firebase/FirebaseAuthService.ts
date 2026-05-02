@@ -11,6 +11,7 @@ import {
     reauthenticateWithCredential,
     verifyBeforeUpdateEmail,
     updatePassword,
+    deleteUser,
 } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { updateProfile } from 'firebase/auth'; // Import updateProfile
@@ -205,6 +206,35 @@ export class FirebaseAuthService implements IAuthService {
         }
 
         return changedAt;
+    }
+
+    async deleteAccount(currentPassword: string): Promise<void> {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser || !firebaseUser.email) {
+            throw new Error('No hay sesión activa');
+        }
+
+        // 1. Re-auth para confirmar identidad
+        const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
+        await reauthenticateWithCredential(firebaseUser, credential);
+
+        // 2. Necesitamos username + uid antes de borrar nada
+        const userId = firebaseUser.uid;
+        const username = firebaseUser.displayName;
+        if (!username) {
+            throw new Error('Perfil incompleto: falta username');
+        }
+
+        // 3. Cascade Firestore (todo lo del user salvo Auth)
+        await userRepository.cascadeDeleteUserData(userId, username);
+
+        // 4. Por ultimo, borra el user de Firebase Auth. Esto invalida el token
+        // y deja al cliente sign-out automaticamente. Si fallara aqui, el user
+        // de Auth queda huerfano sin datos en Firestore — bizarre pero
+        // recuperable: en proximo login, el listener de onAuthStateChanged ve
+        // que getUserProfile devuelve null y la app trata al user como
+        // 'isProfileComplete: false' lo que dispara UsernameSetupModal.
+        await deleteUser(firebaseUser);
     }
 
     getCurrentUser(): User | null {
