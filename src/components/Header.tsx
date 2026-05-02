@@ -175,7 +175,7 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
     );
 }
 
-export default function Header({ user, activeTab }: HeaderProps) {
+export default function Header({ user, activeTab }: Readonly<HeaderProps>) {
     const handleLogout = async () => {
         await authService.logout();
         window.location.href = '/';

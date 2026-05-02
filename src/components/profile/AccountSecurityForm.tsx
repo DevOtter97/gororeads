@@ -36,7 +36,7 @@ type PasswordState = {
  * La uniqueness del email la enforza Firebase Auth (devuelve
  * `auth/email-already-in-use` si ya esta cogido). No hace falta check previo.
  */
-export default function AccountSecurityForm({ currentEmail, currentUsername, usernameChangedAt }: Props) {
+export default function AccountSecurityForm({ currentEmail, currentUsername, usernameChangedAt }: Readonly<Props>) {
     // ─────────────────────────────── Email change ───────────────────────────────
     const [newEmail, setNewEmail] = useState('');
     const [emailPassword, setEmailPassword] = useState('');

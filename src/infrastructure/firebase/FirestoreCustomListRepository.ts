@@ -75,7 +75,7 @@ function toComment(id: string, data: Record<string, unknown>): ListComment {
 }
 
 export class FirestoreCustomListRepository implements ICustomListRepository {
-    private collectionRef = collection(db, COLLECTION_NAME);
+    private readonly collectionRef = collection(db, COLLECTION_NAME);
 
     async create(userId: string, userName: string, data: CreateCustomListDTO): Promise<CustomList> {
         const now = Timestamp.now();

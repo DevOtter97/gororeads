@@ -17,7 +17,7 @@ export default function ListCommentSection({
     currentUser,
     onCommentAdded,
     onRequireAuth,
-}: Props) {
+}: Readonly<Props>) {
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
 

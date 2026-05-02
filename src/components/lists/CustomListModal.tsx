@@ -12,7 +12,7 @@ interface Props {
     onClose: () => void;
 }
 
-export default function CustomListModal({ list, user, onSubmit, onClose }: Props) {
+export default function CustomListModal({ list, user, onSubmit, onClose }: Readonly<Props>) {
     const [name, setName] = useState(list?.name || '');
     const [description, setDescription] = useState(list?.description || '');
     const [visibility, setVisibility] = useState<ListVisibility>(list?.visibility || 'private');

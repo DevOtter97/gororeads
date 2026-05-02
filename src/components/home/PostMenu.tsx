@@ -4,7 +4,7 @@ interface Props {
     onDelete: () => void;
 }
 
-export default function PostMenu({ onDelete }: Props) {
+export default function PostMenu({ onDelete }: Readonly<Props>) {
     const { open, setOpen, toggle, wrapperRef } = useDropdown<HTMLDivElement>();
 
     return (

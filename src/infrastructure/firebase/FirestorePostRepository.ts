@@ -50,7 +50,7 @@ function toPost(id: string, data: DocumentData): Post {
 }
 
 export class FirestorePostRepository implements IPostRepository {
-    private collectionRef = collection(db, COLLECTION_NAME);
+    private readonly collectionRef = collection(db, COLLECTION_NAME);
 
     async create(author: User, data: CreatePostDTO): Promise<Post> {
         const now = Timestamp.now();

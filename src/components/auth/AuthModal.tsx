@@ -17,7 +17,7 @@ interface Props {
  * pasandoles `onSuccess` para que NO redirijan a `/` y en su lugar cierren
  * el modal. Asi el usuario se queda en la pagina donde lo abrio.
  */
-export default function AuthModal({ initialTab = 'login', message, onClose, onSuccess }: Props) {
+export default function AuthModal({ initialTab = 'login', message, onClose, onSuccess }: Readonly<Props>) {
     const [tab, setTab] = useState<'login' | 'register'>(initialTab);
 
     const handleSuccess = () => {

@@ -7,7 +7,7 @@ interface Props {
     onSuccess?: () => void;
 }
 
-export default function LoginForm({ onSuccess }: Props) {
+export default function LoginForm({ onSuccess }: Readonly<Props>) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');

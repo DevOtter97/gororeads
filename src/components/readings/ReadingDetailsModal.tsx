@@ -7,7 +7,7 @@ interface Props {
   onEdit: (reading: Reading) => void;
 }
 
-export default function ReadingDetailsModal({ reading, onClose, onEdit }: Props) {
+export default function ReadingDetailsModal({ reading, onClose, onEdit }: Readonly<Props>) {
   const formatDate = (date?: Date) => {
     if (!date) return 'No definida';
     return new Date(date).toLocaleDateString('es-ES', {

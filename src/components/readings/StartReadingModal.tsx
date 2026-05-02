@@ -8,7 +8,7 @@ interface Props {
     onCancel: () => void;
 }
 
-export default function StartReadingModal({ reading, onConfirm, onCancel }: Props) {
+export default function StartReadingModal({ reading, onConfirm, onCancel }: Readonly<Props>) {
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [progress, setProgress] = useState(reading.currentChapter || 0);
     const [measureUnit, setMeasureUnit] = useState<ReadingMeasureUnit>(reading.measureUnit);

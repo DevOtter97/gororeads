@@ -24,7 +24,7 @@ export default function ProfilePostsTab({
     repostedIds,
     emptyMessage,
     onLoadMore,
-}: Props) {
+}: Readonly<Props>) {
     return (
         <section class="tab-section">
             {loading ? (

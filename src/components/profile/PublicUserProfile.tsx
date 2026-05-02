@@ -22,7 +22,7 @@ type Tab = 'posts' | 'comments' | 'lists';
 
 const POSTS_PAGE_SIZE = 20;
 
-export default function PublicUserProfile({ username }: Props) {
+export default function PublicUserProfile({ username }: Readonly<Props>) {
     const { user: currentUser } = useAuth({ redirectIfUnauthenticated: '/' });
     const [profile, setProfile] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);

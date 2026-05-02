@@ -10,7 +10,7 @@ interface Props {
   onToggleFavorite: (id: string, isFavorite: boolean) => void;
 }
 
-export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatusChange, onToggleFavorite }: Props) {
+export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatusChange, onToggleFavorite }: Readonly<Props>) {
   const handleStatusChange = (e: Event) => {
     e.stopPropagation();
     const newStatus = (e.target as HTMLSelectElement).value as Reading['status'];

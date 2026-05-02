@@ -11,7 +11,7 @@ interface Props {
     postId: string;
 }
 
-export default function PostDetailView({ postId }: Props) {
+export default function PostDetailView({ postId }: Readonly<Props>) {
     const { user, authResolved } = useAuth({ redirectIfUnauthenticated: '/' });
     const [post, setPost] = useState<Post | null>(null);
     const [liked, setLiked] = useState(false);

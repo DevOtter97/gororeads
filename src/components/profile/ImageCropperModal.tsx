@@ -7,7 +7,7 @@ interface Props {
     onCrop: (blob: Blob) => void;
 }
 
-export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Props) {
+export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Readonly<Props>) {
     const [zoom, setZoom] = useState(1);
     const [minZoom, setMinZoom] = useState(1);
     const [offset, setOffset] = useState({ x: 0, y: 0 });

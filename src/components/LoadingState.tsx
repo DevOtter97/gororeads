@@ -3,7 +3,7 @@ interface LoadingStateProps {
     fullScreen?: boolean;
 }
 
-export default function LoadingState({ message = 'Cargando...', fullScreen = true }: LoadingStateProps) {
+export default function LoadingState({ message = 'Cargando...', fullScreen = true }: Readonly<LoadingStateProps>) {
     return (
         <>
             <div class={`loading-state${fullScreen ? ' loading-state--fullscreen' : ''}`}>

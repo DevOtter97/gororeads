@@ -36,7 +36,7 @@ export default function ConfirmModal({
     loadingLabel = 'Procesando...',
     onConfirm,
     onCancel,
-}: Props) {
+}: Readonly<Props>) {
     // Cerrar con Escape
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {

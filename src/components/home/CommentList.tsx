@@ -39,7 +39,7 @@ function buildTree(comments: PostComment[]): CommentTree {
     return { roots, repliesByParent };
 }
 
-export default function CommentList({ post, currentUser, onCountChange }: Props) {
+export default function CommentList({ post, currentUser, onCountChange }: Readonly<Props>) {
     const [comments, setComments] = useState<PostComment[]>([]);
     const [loading, setLoading] = useState(true);
     const [text, setText] = useState('');

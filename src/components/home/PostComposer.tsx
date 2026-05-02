@@ -48,7 +48,7 @@ const TABS: { mode: Mode; label: string; icon: preact.JSX.Element }[] = [
     },
 ];
 
-export default function PostComposer({ user, onPosted }: Props) {
+export default function PostComposer({ user, onPosted }: Readonly<Props>) {
     const [mode, setMode] = useState<Mode>('text');
     const [text, setText] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);

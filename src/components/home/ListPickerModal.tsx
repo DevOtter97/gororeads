@@ -10,7 +10,7 @@ interface Props {
     onClose: () => void;
 }
 
-export default function ListPickerModal({ userId, onSelect, onClose }: Props) {
+export default function ListPickerModal({ userId, onSelect, onClose }: Readonly<Props>) {
     const [lists, setLists] = useState<CustomList[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');

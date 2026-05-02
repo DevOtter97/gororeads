@@ -25,7 +25,7 @@ afterEach(() => {
  * En cada cleanup() lo vaciamos para que los tests sean independientes.
  */
 class MemoryStorage implements Storage {
-    private map = new Map<string, string>();
+    private readonly map = new Map<string, string>();
     get length() { return this.map.size; }
     clear(): void { this.map.clear(); }
     getItem(key: string): string | null { return this.map.has(key) ? this.map.get(key)! : null; }

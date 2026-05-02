@@ -5,7 +5,7 @@ interface Props {
     readings: ListReading[];
 }
 
-export default function ListReadingsGrid({ readings }: Props) {
+export default function ListReadingsGrid({ readings }: Readonly<Props>) {
     return (
         <section class="readings-section">
             <h2>Lecturas</h2>

@@ -12,7 +12,7 @@ interface Props {
     onRequestHandled?: () => void;
 }
 
-export default function FriendRequestList({ userId, onRequestHandled }: Props) {
+export default function FriendRequestList({ userId, onRequestHandled }: Readonly<Props>) {
     const [requests, setRequests] = useState<FriendRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
