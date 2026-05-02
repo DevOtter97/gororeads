@@ -110,7 +110,6 @@ export class FirebaseAuthService implements IAuthService {
         ]);
 
         return user;
-        return user;
     }
 
     async loginWithGoogle(): Promise<User> {
