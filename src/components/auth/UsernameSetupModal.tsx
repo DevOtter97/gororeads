@@ -93,10 +93,11 @@ export default function UsernameSetupModal({ user, onComplete }: Props) {
 
                 <form onSubmit={handleSubmit}>
                     <div class="form-group">
-                        <label class="form-label">
+                        <label class="form-label" htmlFor="setupUsername">
                             Nombre de Usuario
                         </label>
                         <input
+                            id="setupUsername"
                             type="text"
                             value={username}
                             onInput={(e) => {

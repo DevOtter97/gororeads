@@ -198,18 +198,19 @@ export default function UserProfile() {
 
                         <div class="profile-form">
                             <div class="form-group">
-                                <label class="form-label">Username</label>
-                                <input type="text" class="form-input" value={profile.username} disabled />
+                                <label class="form-label" htmlFor="profileUsername">Username</label>
+                                <input id="profileUsername" type="text" class="form-input" value={profile.username} disabled />
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="text" class="form-input" value={profile.email} disabled />
+                                <label class="form-label" htmlFor="profileEmail">Email</label>
+                                <input id="profileEmail" type="text" class="form-input" value={profile.email} disabled />
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Nombre para mostrar</label>
+                                <label class="form-label" htmlFor="profileDisplayName">Nombre para mostrar</label>
                                 <input
+                                    id="profileDisplayName"
                                     type="text"
                                     class="form-input"
                                     value={displayName}
@@ -221,8 +222,9 @@ export default function UserProfile() {
 
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Edad</label>
+                                    <label class="form-label" htmlFor="profileAge">Edad</label>
                                     <input
+                                        id="profileAge"
                                         type="number"
                                         class="form-input"
                                         value={age}
@@ -233,8 +235,9 @@ export default function UserProfile() {
                                     />
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Pais</label>
+                                    <label class="form-label" htmlFor="profileCountry">Pais</label>
                                     <input
+                                        id="profileCountry"
                                         type="text"
                                         class="form-input"
                                         value={country}

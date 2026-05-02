@@ -152,12 +152,12 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
                 </p>
 
                 <div class="form-group">
-                    <label class="form-label">Email actual</label>
-                    <input class="form-input" type="email" value={currentEmail} disabled />
+                    <label class="form-label" htmlFor="currentEmail">Email actual</label>
+                    <input id="currentEmail" class="form-input" type="email" value={currentEmail} disabled />
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="newEmail">Email nuevo</label>
+                    <label class="form-label" htmlFor="newEmail">Email nuevo</label>
                     <input
                         id="newEmail"
                         class="form-input"
@@ -170,7 +170,7 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="emailPassword">Contraseña actual</label>
+                    <label class="form-label" htmlFor="emailPassword">Contraseña actual</label>
                     <input
                         id="emailPassword"
                         class="form-input"
@@ -202,7 +202,7 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
                 <h3 class="account-security-subtitle">Cambiar contraseña</h3>
 
                 <div class="form-group">
-                    <label class="form-label" for="currentPassword">Contraseña actual</label>
+                    <label class="form-label" htmlFor="currentPassword">Contraseña actual</label>
                     <input
                         id="currentPassword"
                         class="form-input"
@@ -215,7 +215,7 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="newPassword">Contraseña nueva</label>
+                    <label class="form-label" htmlFor="newPassword">Contraseña nueva</label>
                     <input
                         id="newPassword"
                         class="form-input"
@@ -229,7 +229,7 @@ export default function AccountSecurityForm({ currentEmail, currentUsername, use
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="confirmPassword">Confirmar contraseña nueva</label>
+                    <label class="form-label" htmlFor="confirmPassword">Confirmar contraseña nueva</label>
                     <input
                         id="confirmPassword"
                         class="form-input"
