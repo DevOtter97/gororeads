@@ -104,8 +104,9 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Nombre *</label>
+                        <label className="form-label" htmlFor="listName">Nombre *</label>
                         <input
+                            id="listName"
                             type="text"
                             className="form-input"
                             value={name}
@@ -116,8 +117,9 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Descripción</label>
+                        <label className="form-label" htmlFor="listDescription">Descripción</label>
                         <textarea
+                            id="listDescription"
                             className="form-input"
                             value={description}
                             onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
@@ -127,8 +129,8 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Visibilidad</label>
+                    <fieldset className="form-group" style={{ border: 'none', padding: 0, margin: 0 }}>
+                        <legend className="form-label">Visibilidad</legend>
                         <div className="visibility-options">
                             {(Object.entries(VISIBILITY_LABELS) as [ListVisibility, string][]).map(([value, label]) => (
                                 <label key={value} className={`visibility-option ${visibility === value ? 'active' : ''}`}>
@@ -143,14 +145,15 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
                                 </label>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     <div className="form-group">
                         <div className="readings-header">
-                            <label className="form-label">
+                            <label className="form-label" htmlFor="listReadingsSearch">
                                 Lecturas ({selectedReadings.length} seleccionadas)
                             </label>
                             <input
+                                id="listReadingsSearch"
                                 type="text"
                                 className="readings-search"
                                 placeholder="Buscar..."

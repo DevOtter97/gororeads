@@ -72,7 +72,7 @@ export default function DeleteAccountSection({ currentUsername }: Readonly<Props
 
             <form class="delete-account-form" onSubmit={handleSubmit}>
                 <div class="form-group">
-                    <label class="form-label" for="confirmUsername">
+                    <label class="form-label" htmlFor="confirmUsername">
                         Para confirmar, escribe tu nombre de usuario: <code>{currentUsername}</code>
                     </label>
                     <input
@@ -87,7 +87,7 @@ export default function DeleteAccountSection({ currentUsername }: Readonly<Props
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="deletePassword">Contraseña actual</label>
+                    <label class="form-label" htmlFor="deletePassword">Contraseña actual</label>
                     <input
                         id="deletePassword"
                         class="form-input"
