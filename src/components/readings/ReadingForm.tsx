@@ -20,6 +20,12 @@ const formatDateInput = (date: Date | string | undefined, fallback = ''): string
 
 const todayDateInput = (): string => new Date().toISOString().split('T')[0];
 
+const currentProgressLabel = (measureUnit: ReadingMeasureUnit): string => {
+    if (measureUnit === 'percentage') return 'Porcentaje Actual (%)';
+    if (measureUnit === 'pages') return 'Página Actual';
+    return 'Capítulo Actual';
+};
+
 export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Props>) {
     const [title, setTitle] = useState(reading?.title || '');
     const [imageUrl, setImageUrl] = useState(reading?.imageUrl || '');
@@ -402,8 +408,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" htmlFor="currentChapter">
-                            {measureUnit === 'percentage' ? 'Porcentaje Actual (%)' :
-                                measureUnit === 'pages' ? 'Página Actual' : 'Capítulo Actual'}
+                            {currentProgressLabel(measureUnit)}
                         </label>
                         <input
                             id="currentChapter"
@@ -507,7 +512,8 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Pr
                     class="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? <span class="spinner"></span> : (reading ? 'Guardar Cambios' : 'Crear Lectura')}
+                    {loading && <span class="spinner"></span>}
+                    {!loading && (reading ? 'Guardar Cambios' : 'Crear Lectura')}
                 </button>
             </div>
 

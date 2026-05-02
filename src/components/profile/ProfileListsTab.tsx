@@ -8,24 +8,29 @@ interface Props {
 }
 
 export default function ProfileListsTab({ lists, loading, emptyMessage }: Readonly<Props>) {
+    let content;
+    if (loading) {
+        content = <p class="tab-status">Cargando listas...</p>;
+    } else if (lists.length === 0) {
+        content = <p class="tab-status">{emptyMessage}</p>;
+    } else {
+        content = (
+            <div class="profile-lists-grid">
+                {lists.map(list => (
+                    <CustomListCard
+                        key={list.id}
+                        list={list}
+                        readings={list.readings}
+                        onView={(l) => { window.location.href = `/list/${l.slug}`; }}
+                    />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <section id="lists" class="tab-section">
-            {loading ? (
-                <p class="tab-status">Cargando listas...</p>
-            ) : lists.length === 0 ? (
-                <p class="tab-status">{emptyMessage}</p>
-            ) : (
-                <div class="profile-lists-grid">
-                    {lists.map(list => (
-                        <CustomListCard
-                            key={list.id}
-                            list={list}
-                            readings={list.readings}
-                            onView={(l) => { window.location.href = `/list/${l.slug}`; }}
-                        />
-                    ))}
-                </div>
-            )}
+            {content}
 
             <style>{`
                 .tab-section { min-height: 200px; }

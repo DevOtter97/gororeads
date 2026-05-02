@@ -158,12 +158,13 @@ export default function UserProfile() {
                     <h1 class="page-title">Configuración</h1>
                 </div>
 
-                {loading ? (
+                {loading && (
                     <div class="loading-container">
                         <span class="spinner" />
                         <span>Cargando perfil...</span>
                     </div>
-                ) : profile ? (
+                )}
+                {!loading && profile && (
                     <>
                     <div class="profile-card">
                         <div
@@ -271,7 +272,8 @@ export default function UserProfile() {
                         </svg>
                     </a>
                     </>
-                ) : (
+                )}
+                {!loading && !profile && (
                     <EmptyState description="No se pudo cargar el perfil" />
                 )}
             </main>

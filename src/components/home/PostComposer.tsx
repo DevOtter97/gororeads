@@ -48,6 +48,19 @@ const TABS: { mode: Mode; label: string; icon: preact.JSX.Element }[] = [
     },
 ];
 
+function composerPlaceholder(mode: Mode): string {
+    if (mode === 'text') return '¿Qué estás leyendo?';
+    if (mode === 'image') return 'Añade un comentario (opcional)';
+    if (mode === 'reading') return '¿Qué te parece esta lectura? (opcional)';
+    return '¿Por qué te gusta esta lista? (opcional)';
+}
+
+function charCountModifier(over: boolean, remaining: number): string {
+    if (over) return 'char-count--over';
+    if (remaining <= 50) return 'char-count--low';
+    return '';
+}
+
 export default function PostComposer({ user, onPosted }: Readonly<Props>) {
     const [mode, setMode] = useState<Mode>('text');
     const [text, setText] = useState('');
@@ -174,12 +187,7 @@ export default function PostComposer({ user, onPosted }: Readonly<Props>) {
                     <UserAvatar username={user.username} photoUrl={user.photoURL} size={40} />
                     <textarea
                         class="composer-input"
-                        placeholder={
-                            mode === 'text' ? '¿Qué estás leyendo?' :
-                                mode === 'image' ? 'Añade un comentario (opcional)' :
-                                    mode === 'reading' ? '¿Qué te parece esta lectura? (opcional)' :
-                                        '¿Por qué te gusta esta lista? (opcional)'
-                        }
+                        placeholder={composerPlaceholder(mode)}
                         value={text}
                         onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
                         rows={3}
@@ -284,7 +292,7 @@ export default function PostComposer({ user, onPosted }: Readonly<Props>) {
                 )}
 
                 <div class="composer-footer">
-                    <span class={`char-count ${textOver ? 'char-count--over' : remaining <= 50 ? 'char-count--low' : ''}`}>
+                    <span class={`char-count ${charCountModifier(textOver, remaining)}`}>
                         {remaining}
                     </span>
                     <div class="composer-actions">

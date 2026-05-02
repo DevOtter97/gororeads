@@ -12,6 +12,11 @@ interface Props {
     onClose: () => void;
 }
 
+function submitButtonLabel(loading: boolean, isEdit: boolean): string {
+    if (loading) return 'Guardando...';
+    return isEdit ? 'Guardar' : 'Crear Lista';
+}
+
 export default function CustomListModal({ list, user, onSubmit, onClose }: Readonly<Props>) {
     const [name, setName] = useState(list?.name || '');
     const [description, setDescription] = useState(list?.description || '');
@@ -162,16 +167,18 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
                             />
                         </div>
                         <div className="readings-selector">
-                            {loadingReadings ? (
+                            {loadingReadings && (
                                 <div className="readings-loading">
                                     <span className="spinner" />
                                     {' '}Cargando lecturas...
                                 </div>
-                            ) : userReadings.length === 0 ? (
+                            )}
+                            {!loadingReadings && userReadings.length === 0 && (
                                 <div className="readings-empty">
                                     No tienes lecturas aún
                                 </div>
-                            ) : (
+                            )}
+                            {!loadingReadings && userReadings.length > 0 && (
                                 <div className="readings-list">
                                     {userReadings
                                         .filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -212,7 +219,7 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Reado
                             Cancelar
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {loading ? 'Guardando...' : (list ? 'Guardar' : 'Crear Lista')}
+                            {submitButtonLabel(loading, !!list)}
                         </button>
                     </div>
                 </form>
