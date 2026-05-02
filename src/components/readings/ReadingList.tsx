@@ -46,8 +46,7 @@ export default function ReadingList() {
                 setReadings(data);
 
                 // Extract unique tags
-                const tags = new Set<string>();
-                data.forEach((r) => r.tags.forEach((t) => tags.add(t)));
+                const tags = new Set<string>(data.flatMap((r) => r.tags));
                 setAvailableTags(Array.from(tags).sort((a, b) => a.localeCompare(b)));
             } catch (err) {
                 setError('Error al cargar las lecturas');
