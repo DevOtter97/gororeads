@@ -54,7 +54,7 @@ function buildUpdatePayload(data: UpdateReadingDTO, now: Timestamp): Record<stri
 function mergeReading(existing: Reading, data: UpdateReadingDTO, now: Timestamp): Reading {
     const pickOptional = <K extends keyof UpdateReadingDTO>(key: K): UpdateReadingDTO[K] | undefined => {
         if (data[key] === undefined) return existing[key as keyof Reading] as UpdateReadingDTO[K] | undefined;
-        return (data[key] ?? undefined) as UpdateReadingDTO[K] | undefined;
+        return data[key] ?? undefined;
     };
 
     return {
@@ -178,9 +178,10 @@ export class FirestoreReadingRepository implements IReadingRepository {
         if (filters?.category) {
             readings = readings.filter((r) => r.category === filters.category);
         }
-        if (filters?.tags && filters.tags.length > 0) {
+        const tagsFilter = filters?.tags;
+        if (tagsFilter && tagsFilter.length > 0) {
             readings = readings.filter((r) =>
-                filters.tags!.some((tag) => r.tags.includes(tag))
+                tagsFilter.some((tag) => r.tags.includes(tag))
             );
         }
         if (filters?.searchQuery) {

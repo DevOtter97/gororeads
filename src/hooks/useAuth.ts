@@ -51,7 +51,7 @@ export function useAuth(options: UseAuthOptions = {}): UseAuthResult {
             setUser(u);
             setAuthResolved(true);
             if (!u && options.redirectIfUnauthenticated) {
-                window.location.href = options.redirectIfUnauthenticated;
+                globalThis.location.href = options.redirectIfUnauthenticated;
             }
         });
         return unsub;

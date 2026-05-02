@@ -38,7 +38,7 @@ export default function DeleteAccountSection({ currentUsername }: Readonly<Props
         try {
             await authService.deleteAccount(password);
             // Redirigimos a / tras el borrado. El listener de auth ya emitio null.
-            window.location.href = '/';
+            globalThis.location.href = '/';
         } catch (err: unknown) {
             const code = (err as { code?: string }).code;
             const message = (err as { message?: string }).message;

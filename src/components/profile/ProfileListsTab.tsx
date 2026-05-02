@@ -21,7 +21,7 @@ export default function ProfileListsTab({ lists, loading, emptyMessage }: Readon
                         key={list.id}
                         list={list}
                         readings={list.readings}
-                        onView={(l) => { window.location.href = `/list/${l.slug}`; }}
+                        onView={(l) => { globalThis.location.href = `/list/${l.slug}`; }}
                     />
                 ))}
             </div>

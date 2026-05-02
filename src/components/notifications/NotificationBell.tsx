@@ -43,7 +43,7 @@ export default function NotificationBell({ userId }: Readonly<Props>) {
             await handleMarkAsRead(notification.id);
         }
         const target = resolveNotificationTarget(notification);
-        if (target) window.location.href = target;
+        if (target) globalThis.location.href = target;
     };
 
     const handleMarkAsRead = async (notificationId: string) => {

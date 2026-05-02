@@ -87,7 +87,7 @@ const THEME_OPTIONS: { value: ThemePref; label: string; icon: preact.JSX.Element
     },
 ];
 
-function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
+function UserMenu({ user, onLogout }: Readonly<{ user: any; onLogout: () => void }>) {
     const { open, toggle, wrapperRef } = useDropdown<HTMLDivElement>();
     const [theme, setTheme] = useState<ThemePref>('system');
 
@@ -178,7 +178,7 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
 export default function Header({ user, activeTab }: Readonly<HeaderProps>) {
     const handleLogout = async () => {
         await authService.logout();
-        window.location.href = '/';
+        globalThis.location.href = '/';
     };
 
     return (

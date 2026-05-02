@@ -28,19 +28,19 @@ class MemoryStorage implements Storage {
     private readonly map = new Map<string, string>();
     get length() { return this.map.size; }
     clear(): void { this.map.clear(); }
-    getItem(key: string): string | null { return this.map.has(key) ? this.map.get(key)! : null; }
+    getItem(key: string): string | null { return this.map.get(key) ?? null; }
     setItem(key: string, value: string): void { this.map.set(key, String(value)); }
     removeItem(key: string): void { this.map.delete(key); }
     key(index: number): string | null { return Array.from(this.map.keys())[index] ?? null; }
 }
 
-if (typeof window !== 'undefined') {
-    Object.defineProperty(window, 'localStorage', {
+if (typeof globalThis.window !== 'undefined') {
+    Object.defineProperty(globalThis, 'localStorage', {
         value: new MemoryStorage(),
         writable: true,
         configurable: true,
     });
-    Object.defineProperty(window, 'sessionStorage', {
+    Object.defineProperty(globalThis, 'sessionStorage', {
         value: new MemoryStorage(),
         writable: true,
         configurable: true,
@@ -48,15 +48,15 @@ if (typeof window !== 'undefined') {
 }
 
 afterEach(() => {
-    if (typeof window !== 'undefined') {
-        window.localStorage.clear();
-        window.sessionStorage.clear();
+    if (typeof globalThis.window !== 'undefined') {
+        globalThis.localStorage.clear();
+        globalThis.sessionStorage.clear();
     }
 });
 
 // matchMedia: necesario para el detector de prefers-color-scheme en theme.ts
-if (typeof window !== 'undefined' && !window.matchMedia) {
-    Object.defineProperty(window, 'matchMedia', {
+if (typeof globalThis.window !== 'undefined' && !globalThis.matchMedia) {
+    Object.defineProperty(globalThis, 'matchMedia', {
         writable: true,
         value: vi.fn().mockImplementation((query: string) => ({
             matches: false,
@@ -72,7 +72,7 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 }
 
 // IntersectionObserver: algunos hooks futuros podrian usarlo
-if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
+if (typeof globalThis.window !== 'undefined' && !('IntersectionObserver' in globalThis)) {
     class MockIntersectionObserver {
         observe = vi.fn();
         unobserve = vi.fn();
@@ -82,15 +82,15 @@ if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
         rootMargin = '';
         thresholds = [];
     }
-    (window as unknown as { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver = MockIntersectionObserver;
+    (globalThis as unknown as { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver = MockIntersectionObserver;
 }
 
 // ResizeObserver: idem
-if (typeof window !== 'undefined' && !('ResizeObserver' in window)) {
+if (typeof globalThis.window !== 'undefined' && !('ResizeObserver' in globalThis)) {
     class MockResizeObserver {
         observe = vi.fn();
         unobserve = vi.fn();
         disconnect = vi.fn();
     }
-    (window as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
+    (globalThis as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver;
 }

@@ -30,10 +30,12 @@ function buildTree(comments: PostComment[]): CommentTree {
             // Top-level o huerfano (parent borrado): se trata como top-level.
             roots.push(c);
         } else {
-            if (!repliesByParent.has(c.parentId)) {
-                repliesByParent.set(c.parentId, []);
+            const list = repliesByParent.get(c.parentId);
+            if (list) {
+                list.push(c);
+            } else {
+                repliesByParent.set(c.parentId, [c]);
             }
-            repliesByParent.get(c.parentId)!.push(c);
         }
     }
     return { roots, repliesByParent };

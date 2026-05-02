@@ -130,7 +130,7 @@ export default function PostComposer({ user, onPosted }: Readonly<Props>) {
     };
 
     const uploadImage = async (file: File): Promise<string> => {
-        const filename = `${Date.now()}-${file.name.replace(/[^a-z0-9.\-_]/gi, '_')}`;
+        const filename = `${Date.now()}-${file.name.replaceAll(/[^a-z0-9.\-_]/gi, '_')}`;
         const path = `posts/${user.id}/${filename}`;
         const ref = storageRef(storage, path);
         await uploadBytes(ref, file);

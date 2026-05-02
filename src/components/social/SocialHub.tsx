@@ -13,7 +13,7 @@ export default function SocialHub() {
 
     // Tab inicial via query param ?tab=...
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(globalThis.location.search);
         const tabParam = params.get('tab');
         if (tabParam === 'requests' || tabParam === 'friends' || tabParam === 'search') {
             setActiveTab(tabParam);
