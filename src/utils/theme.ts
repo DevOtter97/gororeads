@@ -12,7 +12,7 @@ export type ThemePref = 'system' | 'light' | 'dark';
 const STORAGE_KEY = 'theme';
 
 export function getThemePref(): ThemePref {
-    if (typeof globalThis.window === 'undefined') return 'system';
+    if (globalThis.window === undefined) return 'system';
     try {
         const v = localStorage.getItem(STORAGE_KEY);
         if (v === 'light' || v === 'dark') return v;
@@ -23,7 +23,7 @@ export function getThemePref(): ThemePref {
 }
 
 export function setThemePref(pref: ThemePref): void {
-    if (typeof globalThis.window === 'undefined') return;
+    if (globalThis.window === undefined) return;
     const html = document.documentElement;
     if (pref === 'system') {
         try {

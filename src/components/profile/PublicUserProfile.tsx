@@ -69,7 +69,7 @@ export default function PublicUserProfile({ username }: Readonly<Props>) {
 
     // Honra ?tab=... y #lists para deeplinks
     useEffect(() => {
-        if (typeof globalThis.window === 'undefined') return;
+        if (globalThis.window === undefined) return;
         const params = new URLSearchParams(globalThis.location.search);
         const t = params.get('tab');
         if (t === 'comments' || t === 'lists' || t === 'posts') {
