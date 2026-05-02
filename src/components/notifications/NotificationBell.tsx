@@ -103,7 +103,15 @@ export default function NotificationBell({ userId }: Props) {
                                 <div
                                     key={n.id}
                                     class={`notification-item ${!n.read ? 'unread' : ''}`}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => handleNotificationClick(n)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            handleNotificationClick(n);
+                                        }
+                                    }}
                                 >
                                     <div class="notification-item-avatar">
                                         {n.fromUserPhotoUrl ? (

@@ -84,12 +84,19 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => {
-            if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                onClose();
-            }
-        }}>
-            <div className="modal list-modal">
+        <div
+            className="modal-overlay"
+            role="button"
+            tabIndex={-1}
+            aria-label="Cerrar dialogo"
+            onClick={(e) => {
+                if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                    onClose();
+                }
+            }}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+        >
+            <div className="modal list-modal" role="dialog" aria-modal="true">
                 <h2 className="modal-title">
                     {list ? 'Editar Lista' : 'Nueva Lista'}
                 </h2>

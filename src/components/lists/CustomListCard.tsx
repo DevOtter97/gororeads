@@ -61,7 +61,18 @@ export default function CustomListCard({ list, readings, onEdit, onDelete, onVie
     const coverCount = displayReadings.length;
 
     return (
-        <div class="card custom-list-card" onClick={() => onView(list)}>
+        <div
+            class="card custom-list-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => onView(list)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onView(list);
+                }
+            }}
+        >
             <div class="list-card-header">
                 <div class="list-card-covers">
                     {coverCount === 0 ? (

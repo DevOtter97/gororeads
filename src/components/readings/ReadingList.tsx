@@ -319,13 +319,25 @@ export default function ReadingList() {
             {/* Add/Edit Modal */}
             {
                 showModal && (
-                    <div class="modal-overlay" onClick={(e) => {
-                        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                            setShowModal(false);
-                            setEditingReading(undefined);
-                        }
-                    }}>
-                        <div class="modal">
+                    <div
+                        class="modal-overlay"
+                        role="button"
+                        tabIndex={-1}
+                        aria-label="Cerrar dialogo"
+                        onClick={(e) => {
+                            if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                                setShowModal(false);
+                                setEditingReading(undefined);
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                                setShowModal(false);
+                                setEditingReading(undefined);
+                            }
+                        }}
+                    >
+                        <div class="modal" role="dialog" aria-modal="true">
                             <div class="modal-header">
                                 <h2 class="modal-title">
                                     {editingReading ? 'Editar Lectura' : 'Nueva Lectura'}

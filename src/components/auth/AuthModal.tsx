@@ -26,8 +26,21 @@ export default function AuthModal({ initialTab = 'login', message, onClose, onSu
     };
 
     return (
-        <div class="modal-overlay" onClick={onClose}>
-            <div class="modal auth-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+            class="modal-overlay"
+            role="button"
+            tabIndex={-1}
+            aria-label="Cerrar dialogo"
+            onClick={onClose}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+        >
+            <div
+                class="modal auth-modal"
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
                 <div class="auth-modal-header">
                     <div class="auth-modal-tabs" role="tablist">
                         <button
