@@ -46,9 +46,8 @@ export default function ReadingList() {
                 setReadings(data);
 
                 // Extract unique tags
-                const tags = new Set<string>();
-                data.forEach((r) => r.tags.forEach((t) => tags.add(t)));
-                setAvailableTags(Array.from(tags).sort());
+                const tags = new Set<string>(data.flatMap((r) => r.tags));
+                setAvailableTags(Array.from(tags).sort((a, b) => a.localeCompare(b)));
             } catch (err) {
                 setError('Error al cargar las lecturas');
                 console.error(err);
@@ -319,13 +318,25 @@ export default function ReadingList() {
             {/* Add/Edit Modal */}
             {
                 showModal && (
-                    <div class="modal-overlay" onClick={(e) => {
-                        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                            setShowModal(false);
-                            setEditingReading(undefined);
-                        }
-                    }}>
-                        <div class="modal">
+                    <div
+                        class="modal-overlay"
+                        role="button"
+                        tabIndex={-1}
+                        aria-label="Cerrar dialogo"
+                        onClick={(e) => {
+                            if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                                setShowModal(false);
+                                setEditingReading(undefined);
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                                setShowModal(false);
+                                setEditingReading(undefined);
+                            }
+                        }}
+                    >
+                        <div class="modal" role="dialog" aria-modal="true">
                             <div class="modal-header">
                                 <h2 class="modal-title">
                                     {editingReading ? 'Editar Lectura' : 'Nueva Lectura'}

@@ -18,12 +18,19 @@ export default function ReadingDetailsModal({ reading, onClose, onEdit }: Props)
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => {
-      if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-        onClose();
-      }
-    }}>
-      <div className="modal reading-details-modal">
+    <div
+      className="modal-overlay"
+      role="button"
+      tabIndex={-1}
+      aria-label="Cerrar dialogo"
+      onClick={(e) => {
+        if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+          onClose();
+        }
+      }}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+    >
+      <div className="modal reading-details-modal" role="dialog" aria-modal="true">
         <button className="modal-close-btn" onClick={onClose}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" />

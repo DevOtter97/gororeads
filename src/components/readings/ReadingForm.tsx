@@ -13,6 +13,13 @@ interface Props {
     onCancel: () => void;
 }
 
+const formatDateInput = (date: Date | string | undefined, fallback = ''): string => {
+    if (!date) return fallback;
+    return new Date(date).toISOString().split('T')[0];
+};
+
+const todayDateInput = (): string => new Date().toISOString().split('T')[0];
+
 export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     const [title, setTitle] = useState(reading?.title || '');
     const [imageUrl, setImageUrl] = useState(reading?.imageUrl || '');
@@ -26,15 +33,9 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     const [notes, setNotes] = useState(reading?.notes || '');
     const [url, setUrl] = useState(reading?.referenceUrl || '');
     const [startedAt, setStartedAt] = useState(
-        reading?.startedAt
-            ? new Date(reading.startedAt).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0]
+        formatDateInput(reading?.startedAt, todayDateInput())
     );
-    const [finishedAt, setFinishedAt] = useState(
-        reading?.finishedAt
-            ? new Date(reading.finishedAt).toISOString().split('T')[0]
-            : ''
-    );
+    const [finishedAt, setFinishedAt] = useState(formatDateInput(reading?.finishedAt));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 

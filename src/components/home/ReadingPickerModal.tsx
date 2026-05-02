@@ -38,8 +38,21 @@ export default function ReadingPickerModal({ userId, onSelect, onClose }: Props)
     };
 
     return (
-        <div class="modal-overlay" onClick={onClose}>
-            <div class="modal picker-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+            class="modal-overlay"
+            role="button"
+            tabIndex={-1}
+            aria-label="Cerrar dialogo"
+            onClick={onClose}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+        >
+            <div
+                class="modal picker-modal"
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
                 <div class="modal-header">
                     <h3 class="modal-title">Compartir lectura</h3>
                     <button class="modal-close" onClick={onClose} aria-label="Cerrar">

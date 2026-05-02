@@ -18,6 +18,60 @@ import type { Reading, CreateReadingDTO, UpdateReadingDTO } from '../../domain/e
 
 const COLLECTION_NAME = 'readings';
 
+/**
+ * Construye el payload de update para Firestore aplicando solo los campos
+ * que vienen definidos en el DTO. Los campos opcionales que vienen como
+ * `null`/`undefined` quedan como `null` en Firestore (Firestore no acepta
+ * `undefined`). Los timestamps se convierten a Timestamp.
+ */
+function buildUpdatePayload(data: UpdateReadingDTO, now: Timestamp): Record<string, unknown> {
+    const out: Record<string, unknown> = { updatedAt: now };
+
+    const directFields: (keyof UpdateReadingDTO)[] = ['title', 'category', 'status', 'measureUnit', 'tags', 'isFavorite'];
+    for (const k of directFields) {
+        if (data[k] !== undefined) out[k] = data[k];
+    }
+
+    const nullableFields: (keyof UpdateReadingDTO)[] = ['imageUrl', 'currentChapter', 'totalChapters', 'notes', 'referenceUrl'];
+    for (const k of nullableFields) {
+        if (data[k] !== undefined) out[k] = data[k] ?? null;
+    }
+
+    if (data.startedAt !== undefined) {
+        out.startedAt = data.startedAt ? Timestamp.fromDate(data.startedAt) : null;
+    }
+    if (data.finishedAt !== undefined) {
+        out.finishedAt = data.finishedAt ? Timestamp.fromDate(data.finishedAt) : null;
+    }
+
+    return out;
+}
+
+/**
+ * Mergea el DTO de update con la entidad existente para devolver el estado
+ * post-update sin volver a leer Firestore. Para los campos opcionales,
+ * `null` en el DTO significa "limpiar" (devuelve undefined en la entidad).
+ */
+function mergeReading(existing: Reading, data: UpdateReadingDTO, now: Timestamp): Reading {
+    const pickOptional = <K extends keyof UpdateReadingDTO>(key: K): UpdateReadingDTO[K] | undefined => {
+        if (data[key] === undefined) return existing[key as keyof Reading] as UpdateReadingDTO[K] | undefined;
+        return (data[key] ?? undefined) as UpdateReadingDTO[K] | undefined;
+    };
+
+    return {
+        ...existing,
+        ...data,
+        imageUrl: pickOptional('imageUrl') as string | undefined,
+        currentChapter: pickOptional('currentChapter') as number | undefined,
+        totalChapters: pickOptional('totalChapters') as number | undefined,
+        notes: pickOptional('notes') as string | undefined,
+        referenceUrl: pickOptional('referenceUrl') as string | undefined,
+        startedAt: pickOptional('startedAt') as Date | undefined,
+        finishedAt: pickOptional('finishedAt') as Date | undefined,
+        updatedAt: now.toDate(),
+    };
+}
+
 function toReading(id: string, data: Record<string, unknown>): Reading {
     return {
         id,
@@ -72,39 +126,10 @@ export class FirestoreReadingRepository implements IReadingRepository {
         const docRef = doc(db, COLLECTION_NAME, existing.id);
         const now = Timestamp.now();
 
-        const updateData: Record<string, unknown> = { updatedAt: now };
-        if (data.title !== undefined) updateData.title = data.title;
-        if (data.category !== undefined) updateData.category = data.category;
-        if (data.status !== undefined) updateData.status = data.status;
-        if (data.measureUnit !== undefined) updateData.measureUnit = data.measureUnit;
-        if (data.tags !== undefined) updateData.tags = data.tags;
-        if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl ?? null;
-        if (data.currentChapter !== undefined) updateData.currentChapter = data.currentChapter ?? null;
-        if (data.totalChapters !== undefined) updateData.totalChapters = data.totalChapters ?? null;
-        if (data.notes !== undefined) updateData.notes = data.notes ?? null;
-        if (data.referenceUrl !== undefined) updateData.referenceUrl = data.referenceUrl ?? null;
-        if (data.isFavorite !== undefined) updateData.isFavorite = data.isFavorite;
-        if (data.startedAt !== undefined) {
-            updateData.startedAt = data.startedAt ? Timestamp.fromDate(data.startedAt) : null;
-        }
-        if (data.finishedAt !== undefined) {
-            updateData.finishedAt = data.finishedAt ? Timestamp.fromDate(data.finishedAt) : null;
-        }
-
+        const updateData = buildUpdatePayload(data, now);
         await updateDoc(docRef, updateData);
 
-        return {
-            ...existing,
-            ...data,
-            imageUrl: data.imageUrl !== undefined ? (data.imageUrl ?? undefined) : existing.imageUrl,
-            currentChapter: data.currentChapter !== undefined ? (data.currentChapter ?? undefined) : existing.currentChapter,
-            totalChapters: data.totalChapters !== undefined ? (data.totalChapters ?? undefined) : existing.totalChapters,
-            notes: data.notes !== undefined ? (data.notes ?? undefined) : existing.notes,
-            referenceUrl: data.referenceUrl !== undefined ? (data.referenceUrl ?? undefined) : existing.referenceUrl,
-            startedAt: data.startedAt !== undefined ? (data.startedAt ?? undefined) : existing.startedAt,
-            finishedAt: data.finishedAt !== undefined ? (data.finishedAt ?? undefined) : existing.finishedAt,
-            updatedAt: now.toDate(),
-        };
+        return mergeReading(existing, data, now);
     }
 
     async delete(id: string): Promise<void> {
@@ -175,7 +200,7 @@ export class FirestoreReadingRepository implements IReadingRepository {
             reading.tags.forEach((tag) => tagsSet.add(tag));
         });
 
-        return Array.from(tagsSet).sort();
+        return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
     }
 }
 
