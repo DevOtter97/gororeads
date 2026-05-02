@@ -76,7 +76,7 @@ export default function ListCommentSection({
                     <div key={comment.id} class="comment">
                         <div class="comment-header">
                             <span class="comment-author">
-                                {(currentUser && comment.userId === currentUser.id)
+                                {comment.userId === currentUser?.id
                                     ? (currentUser.displayName || currentUser.username || currentUser.email)
                                     : comment.userName}
                             </span>

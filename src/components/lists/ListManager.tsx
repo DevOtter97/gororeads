@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import type { CustomList, ListVisibility, ListReading } from '../../domain/entities/CustomList';
 import { customListRepository } from '../../infrastructure/firebase/FirestoreCustomListRepository';
-import { authService } from '../../infrastructure/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import CustomListCard from './CustomListCard';
 import CustomListModal from './CustomListModal';
@@ -65,11 +64,6 @@ export default function ListManager() {
 
     const handleView = (list: CustomList) => {
         window.location.href = `/list/${list.slug}`;
-    };
-
-    const handleLogout = async () => {
-        await authService.logout();
-        window.location.href = '/';
     };
 
     if (loading) {

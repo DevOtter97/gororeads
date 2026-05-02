@@ -12,8 +12,6 @@ import {
     Timestamp,
     arrayUnion,
     arrayRemove,
-    increment,
-    setDoc,
     runTransaction,
     writeBatch,
 } from 'firebase/firestore';
