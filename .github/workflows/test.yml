@@ -113,3 +113,37 @@ jobs:
 
       - name: Astro build
         run: npm run build
+
+  sonar:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    # No depende del job `unit` para correr en paralelo: este job genera su
+    # propio coverage. Aceptamos correr los unit tests dos veces (una vez en
+    # `unit` sin coverage para fail-fast, otra aqui con coverage) a cambio de
+    # poder paralelizar y mantener `unit` enfocado.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # SonarCloud necesita historial completo para calcular blame
+          # (autoria por linea -> "code introduced by"). Sin esto, asigna
+          # toda la autoria al ultimo committer.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # GITHUB_TOKEN se usa para que la action pueda comentar en la PR.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

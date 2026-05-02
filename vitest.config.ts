@@ -23,5 +23,26 @@ export default defineConfig({
         // Tests co-localizados (*.test.ts/*.test.tsx) o en tests/unit/
         include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/unit/**/*.{test,spec}.{ts,tsx}'],
         css: false, // los <style>{`...`}</style> de los componentes son strings, no nos hace falta procesarlos
+        coverage: {
+            provider: 'v8',
+            // text -> consola en local; lcov -> formato estandar que SonarCloud lee.
+            reporter: ['text', 'lcov'],
+            reportsDirectory: 'coverage',
+            // Solo medimos el codigo de la app, no los archivos de test ni los
+            // de infraestructura del proyecto. Sonar usa este lcov para mostrar
+            // % de cobertura en el dashboard y en cada PR.
+            include: ['src/**/*.{ts,tsx}'],
+            exclude: [
+                '**/*.test.{ts,tsx}',
+                '**/*.spec.{ts,tsx}',
+                '**/*.d.ts',
+                'src/env.d.ts',
+                // Componentes Astro (no son TS analyzables aqui)
+                'src/**/*.astro',
+                // Tipos puros sin logica
+                'src/domain/interfaces/**',
+                'src/domain/entities/**',
+            ],
+        },
     },
 });
