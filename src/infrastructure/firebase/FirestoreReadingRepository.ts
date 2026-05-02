@@ -8,7 +8,6 @@ import {
     getDocs,
     query,
     where,
-    orderBy,
     Timestamp,
     writeBatch,
 } from 'firebase/firestore';
@@ -95,7 +94,7 @@ function toReading(id: string, data: Record<string, unknown>): Reading {
 }
 
 export class FirestoreReadingRepository implements IReadingRepository {
-    private collectionRef = collection(db, COLLECTION_NAME);
+    private readonly collectionRef = collection(db, COLLECTION_NAME);
 
     async create(userId: string, data: CreateReadingDTO): Promise<Reading> {
         const now = Timestamp.now();

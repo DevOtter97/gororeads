@@ -22,7 +22,7 @@ export default function ListHero({
     canLike,
     onLike,
     onRequireAuth,
-}: Props) {
+}: Readonly<Props>) {
     const [linkCopied, setLinkCopied] = useState(false);
 
     const copyLink = async () => {

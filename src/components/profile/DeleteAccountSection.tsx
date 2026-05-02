@@ -20,7 +20,7 @@ interface Props {
  * Tras un borrado exitoso, redirigimos a /. El listener onAuthStateChanged
  * tambien emitira null, asi que la app limpia su estado sola.
  */
-export default function DeleteAccountSection({ currentUsername }: Props) {
+export default function DeleteAccountSection({ currentUsername }: Readonly<Props>) {
     const [confirmText, setConfirmText] = useState('');
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -72,7 +72,7 @@ export default function DeleteAccountSection({ currentUsername }: Props) {
 
             <form class="delete-account-form" onSubmit={handleSubmit}>
                 <div class="form-group">
-                    <label class="form-label" for="confirmUsername">
+                    <label class="form-label" htmlFor="confirmUsername">
                         Para confirmar, escribe tu nombre de usuario: <code>{currentUsername}</code>
                     </label>
                     <input
@@ -87,7 +87,7 @@ export default function DeleteAccountSection({ currentUsername }: Props) {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="deletePassword">Contraseña actual</label>
+                    <label class="form-label" htmlFor="deletePassword">Contraseña actual</label>
                     <input
                         id="deletePassword"
                         class="form-input"

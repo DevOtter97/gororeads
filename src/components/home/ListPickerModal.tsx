@@ -10,7 +10,7 @@ interface Props {
     onClose: () => void;
 }
 
-export default function ListPickerModal({ userId, onSelect, onClose }: Props) {
+export default function ListPickerModal({ userId, onSelect, onClose }: Readonly<Props>) {
     const [lists, setLists] = useState<CustomList[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -72,15 +72,17 @@ export default function ListPickerModal({ userId, onSelect, onClose }: Props) {
                     />
                 </div>
                 <div class="picker-body">
-                    {loading ? (
+                    {loading && (
                         <LoadingState message="Cargando listas..." fullScreen={false} />
-                    ) : filtered.length === 0 ? (
+                    )}
+                    {!loading && filtered.length === 0 && (
                         <p class="picker-empty">
                             {lists.length === 0
                                 ? 'Aún no tienes listas. Crea alguna en /lists.'
                                 : 'Ninguna lista coincide con la busqueda.'}
                         </p>
-                    ) : (
+                    )}
+                    {!loading && filtered.length > 0 && (
                         <ul class="picker-list">
                             {filtered.map(l => (
                                 <li key={l.id}>

@@ -58,8 +58,8 @@ describe('useDropdown', () => {
         });
         expect(result.current.open).toBe(false);
 
-        document.body.removeChild(wrapper);
-        document.body.removeChild(outside);
+        wrapper.remove();
+        outside.remove();
     });
 
     it('click dentro del wrapper NO cierra el dropdown', () => {
@@ -79,7 +79,7 @@ describe('useDropdown', () => {
         });
         expect(result.current.open).toBe(true);
 
-        document.body.removeChild(wrapper);
+        wrapper.remove();
     });
 
     it('Escape cierra el dropdown abierto', () => {

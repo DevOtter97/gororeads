@@ -21,7 +21,7 @@ interface Props {
  * y las reglas Firestore (`allow create` falla si el doc existe). El cooldown
  * tambien esta enforzado server-side en las reglas de `users/{userId}`.
  */
-export default function UsernameChangeForm({ currentUsername, lastChangedAt }: Props) {
+export default function UsernameChangeForm({ currentUsername, lastChangedAt }: Readonly<Props>) {
     const [newUsername, setNewUsername] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -88,12 +88,12 @@ export default function UsernameChangeForm({ currentUsername, lastChangedAt }: P
             </p>
 
             <div class="form-group">
-                <label class="form-label">Username actual</label>
-                <input class="form-input" type="text" value={currentUsername} disabled />
+                <label class="form-label" htmlFor="currentUsername">Username actual</label>
+                <input id="currentUsername" class="form-input" type="text" value={currentUsername} disabled />
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="newUsername">Username nuevo</label>
+                <label class="form-label" htmlFor="newUsername">Username nuevo</label>
                 <input
                     id="newUsername"
                     class="form-input"

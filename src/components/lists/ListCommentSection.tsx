@@ -17,7 +17,7 @@ export default function ListCommentSection({
     currentUser,
     onCommentAdded,
     onRequireAuth,
-}: Props) {
+}: Readonly<Props>) {
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
 
@@ -76,7 +76,7 @@ export default function ListCommentSection({
                     <div key={comment.id} class="comment">
                         <div class="comment-header">
                             <span class="comment-author">
-                                {(currentUser && comment.userId === currentUser.id)
+                                {comment.userId === currentUser?.id
                                     ? (currentUser.displayName || currentUser.username || currentUser.email)
                                     : comment.userName}
                             </span>

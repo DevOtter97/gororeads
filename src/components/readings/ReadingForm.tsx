@@ -20,7 +20,13 @@ const formatDateInput = (date: Date | string | undefined, fallback = ''): string
 
 const todayDateInput = (): string => new Date().toISOString().split('T')[0];
 
-export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
+const currentProgressLabel = (measureUnit: ReadingMeasureUnit): string => {
+    if (measureUnit === 'percentage') return 'Porcentaje Actual (%)';
+    if (measureUnit === 'pages') return 'Página Actual';
+    return 'Capítulo Actual';
+};
+
+export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Props>) {
     const [title, setTitle] = useState(reading?.title || '');
     const [imageUrl, setImageUrl] = useState(reading?.imageUrl || '');
     const [category, setCategory] = useState<ReadingCategory>(reading?.category || 'manga');
@@ -194,7 +200,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
     return (
         <form onSubmit={handleSubmit} class="reading-form" novalidate>
             <div class="form-group">
-                <label class="form-label" for="title">Título *</label>
+                <label class="form-label" htmlFor="title">Título *</label>
                 <div class="title-input-wrapper">
                     <input
                         id="title"
@@ -269,7 +275,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="imageUrl">URL de Imagen (opcional)</label>
+                <label class="form-label" htmlFor="imageUrl">URL de Imagen (opcional)</label>
                 <input
                     id="imageUrl"
                     type="url"
@@ -287,7 +293,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="referenceUrl">Link de Referencia (opcional)</label>
+                <label class="form-label" htmlFor="referenceUrl">Link de Referencia (opcional)</label>
                 <input
                     id="referenceUrl"
                     type="url"
@@ -302,7 +308,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             <div class="form-row">
                 {status !== 'to-read' && (
                     <div class="form-group">
-                        <label class="form-label" for="startedAt">Fecha de Inicio</label>
+                        <label class="form-label" htmlFor="startedAt">Fecha de Inicio</label>
                         <input
                             id="startedAt"
                             type="date"
@@ -316,7 +322,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
 
                 {status === 'completed' && (
                     <div class="form-group">
-                        <label class="form-label" for="finishedAt">Fecha de Fin</label>
+                        <label class="form-label" htmlFor="finishedAt">Fecha de Fin</label>
                         <input
                             id="finishedAt"
                             type="date"
@@ -331,7 +337,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label" for="category">Categoría</label>
+                    <label class="form-label" htmlFor="category">Categoría</label>
                     <select
                         id="category"
                         class="form-input form-select"
@@ -346,7 +352,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="status">Estado</label>
+                    <label class="form-label" htmlFor="status">Estado</label>
                     <select
                         id="status"
                         class="form-input form-select"
@@ -373,8 +379,8 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             </div>
 
             {status !== 'to-read' && (
-                <div class="form-group">
-                    <label class="form-label">Unidad de Progreso</label>
+                <fieldset class="form-group" style={{ border: 'none', padding: 0, margin: 0 }}>
+                    <legend class="form-label">Unidad de Progreso</legend>
                     <div class="radio-group">
                         {Object.entries(MEASURE_UNIT_LABELS).map(([value, label]) => (
                             <label key={value} class={`radio-label ${measureUnit === value ? 'active' : ''}`}>
@@ -395,15 +401,14 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
                             </label>
                         ))}
                     </div>
-                </div>
+                </fieldset>
             )}
 
             {status !== 'to-read' && (
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="currentChapter">
-                            {measureUnit === 'percentage' ? 'Porcentaje Actual (%)' :
-                                measureUnit === 'pages' ? 'Página Actual' : 'Capítulo Actual'}
+                        <label class="form-label" htmlFor="currentChapter">
+                            {currentProgressLabel(measureUnit)}
                         </label>
                         <input
                             id="currentChapter"
@@ -420,7 +425,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
 
                     {measureUnit !== 'percentage' && (
                         <div class="form-group">
-                            <label class="form-label" for="totalChapters">
+                            <label class="form-label" htmlFor="totalChapters">
                                 {measureUnit === 'pages' ? 'Total Páginas' : 'Total Capítulos'}
                             </label>
                             <input
@@ -439,7 +444,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             )}
 
             <div class="form-group">
-                <label class="form-label" for="tags">Etiquetas</label>
+                <label class="form-label" htmlFor="tags">Etiquetas</label>
                 <div class="tags-input-container">
                     <div class="tags-list">
                         {tags.map((tag) => (
@@ -480,7 +485,7 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="notes">Notas (opcional)</label>
+                <label class="form-label" htmlFor="notes">Notas (opcional)</label>
                 <textarea
                     id="notes"
                     class="form-input form-textarea"
@@ -507,7 +512,8 @@ export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
                     class="btn btn-primary"
                     disabled={loading}
                 >
-                    {loading ? <span class="spinner"></span> : (reading ? 'Guardar Cambios' : 'Crear Lectura')}
+                    {loading && <span class="spinner"></span>}
+                    {!loading && (reading ? 'Guardar Cambios' : 'Crear Lectura')}
                 </button>
             </div>
 

@@ -9,7 +9,7 @@ interface Props {
     userId: string;
 }
 
-export default function NotificationBell({ userId }: Props) {
+export default function NotificationBell({ userId }: Readonly<Props>) {
     const [unreadCount, setUnreadCount] = useState(0);
     const { open: isOpen, setOpen: setIsOpen, wrapperRef: dropdownRef } = useDropdown<HTMLDivElement>();
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -90,15 +90,17 @@ export default function NotificationBell({ userId }: Props) {
                     </div>
 
                     <div class="notification-dropdown-body">
-                        {loading ? (
+                        {loading && (
                             <div class="notification-loading">
                                 <div class="spinner"></div>
                             </div>
-                        ) : notifications.length === 0 ? (
+                        )}
+                        {!loading && notifications.length === 0 && (
                             <div class="notification-empty">
                                 No tienes notificaciones
                             </div>
-                        ) : (
+                        )}
+                        {!loading && notifications.length > 0 && (
                             notifications.map(n => (
                                 <div
                                     key={n.id}

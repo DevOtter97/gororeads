@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'preact/hooks';
-import { authService } from '../../infrastructure/firebase/FirebaseAuthService';
 import { readingRepository } from '../../infrastructure/firebase/FirestoreReadingRepository';
 import type { Reading, ReadingStatus, ReadingCategory, CreateReadingDTO, UpdateReadingDTO } from '../../domain/entities/Reading';
 import { useAuth } from '../../hooks/useAuth';
@@ -217,11 +216,6 @@ export default function ReadingList() {
         setSelectedTags([]);
         setSearchQuery('');
         setFavoritesFilter(false);
-    };
-
-    const handleLogout = async () => {
-        await authService.logout();
-        window.location.href = '/';
     };
 
     if (loading) {

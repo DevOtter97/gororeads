@@ -12,7 +12,12 @@ interface Props {
     onClose: () => void;
 }
 
-export default function CustomListModal({ list, user, onSubmit, onClose }: Props) {
+function submitButtonLabel(loading: boolean, isEdit: boolean): string {
+    if (loading) return 'Guardando...';
+    return isEdit ? 'Guardar' : 'Crear Lista';
+}
+
+export default function CustomListModal({ list, user, onSubmit, onClose }: Readonly<Props>) {
     const [name, setName] = useState(list?.name || '');
     const [description, setDescription] = useState(list?.description || '');
     const [visibility, setVisibility] = useState<ListVisibility>(list?.visibility || 'private');
@@ -77,6 +82,7 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
             });
             onClose();
         } catch (err) {
+            console.error('Error saving custom list:', err);
             setError('Error al guardar la lista');
         } finally {
             setLoading(false);
@@ -103,8 +109,9 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Nombre *</label>
+                        <label className="form-label" htmlFor="listName">Nombre *</label>
                         <input
+                            id="listName"
                             type="text"
                             className="form-input"
                             value={name}
@@ -115,8 +122,9 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Descripción</label>
+                        <label className="form-label" htmlFor="listDescription">Descripción</label>
                         <textarea
+                            id="listDescription"
                             className="form-input"
                             value={description}
                             onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
@@ -126,8 +134,8 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Visibilidad</label>
+                    <fieldset className="form-group" style={{ border: 'none', padding: 0, margin: 0 }}>
+                        <legend className="form-label">Visibilidad</legend>
                         <div className="visibility-options">
                             {(Object.entries(VISIBILITY_LABELS) as [ListVisibility, string][]).map(([value, label]) => (
                                 <label key={value} className={`visibility-option ${visibility === value ? 'active' : ''}`}>
@@ -142,14 +150,15 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                                 </label>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
                     <div className="form-group">
                         <div className="readings-header">
-                            <label className="form-label">
+                            <label className="form-label" htmlFor="listReadingsSearch">
                                 Lecturas ({selectedReadings.length} seleccionadas)
                             </label>
                             <input
+                                id="listReadingsSearch"
                                 type="text"
                                 className="readings-search"
                                 placeholder="Buscar..."
@@ -158,16 +167,18 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                             />
                         </div>
                         <div className="readings-selector">
-                            {loadingReadings ? (
+                            {loadingReadings && (
                                 <div className="readings-loading">
-                                    <span className="spinner"></span>
-                                    Cargando lecturas...
+                                    <span className="spinner" />
+                                    {' '}Cargando lecturas...
                                 </div>
-                            ) : userReadings.length === 0 ? (
+                            )}
+                            {!loadingReadings && userReadings.length === 0 && (
                                 <div className="readings-empty">
                                     No tienes lecturas aún
                                 </div>
-                            ) : (
+                            )}
+                            {!loadingReadings && userReadings.length > 0 && (
                                 <div className="readings-list">
                                     {userReadings
                                         .filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -208,7 +219,7 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                             Cancelar
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={loading}>
-                            {loading ? 'Guardando...' : (list ? 'Guardar' : 'Crear Lista')}
+                            {submitButtonLabel(loading, !!list)}
                         </button>
                     </div>
                 </form>

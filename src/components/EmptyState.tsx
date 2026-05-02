@@ -32,7 +32,7 @@ export default function EmptyState({
     children,
     size = 'normal',
     titleAs = 'h3',
-}: Props) {
+}: Readonly<Props>) {
     const TitleTag = titleAs;
     const inlineStyle = size === 'large'
         ? 'padding: var(--space-16) var(--space-4)'

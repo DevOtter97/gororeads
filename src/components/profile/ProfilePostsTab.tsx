@@ -24,39 +24,44 @@ export default function ProfilePostsTab({
     repostedIds,
     emptyMessage,
     onLoadMore,
-}: Props) {
+}: Readonly<Props>) {
+    let content;
+    if (loading) {
+        content = <p class="tab-status">Cargando posts...</p>;
+    } else if (posts.length === 0) {
+        content = <p class="tab-status">{emptyMessage}</p>;
+    } else {
+        content = (
+            <>
+                <ul class="profile-posts-list">
+                    {posts.map(post => {
+                        const originalId = post.repostOf?.postId ?? post.id;
+                        return (
+                            <li key={post.id}>
+                                <PostCard
+                                    post={post}
+                                    currentUser={currentUser}
+                                    initialLiked={likedIds.has(post.id)}
+                                    initialReposted={repostedIds.has(originalId)}
+                                />
+                            </li>
+                        );
+                    })}
+                </ul>
+                {hasMore && (
+                    <div class="load-more-wrapper">
+                        <button class="btn btn-ghost" onClick={onLoadMore} disabled={loadingMore}>
+                            {loadingMore ? 'Cargando...' : 'Cargar más'}
+                        </button>
+                    </div>
+                )}
+            </>
+        );
+    }
+
     return (
         <section class="tab-section">
-            {loading ? (
-                <p class="tab-status">Cargando posts...</p>
-            ) : posts.length === 0 ? (
-                <p class="tab-status">{emptyMessage}</p>
-            ) : (
-                <>
-                    <ul class="profile-posts-list">
-                        {posts.map(post => {
-                            const originalId = post.repostOf?.postId ?? post.id;
-                            return (
-                                <li key={post.id}>
-                                    <PostCard
-                                        post={post}
-                                        currentUser={currentUser}
-                                        initialLiked={likedIds.has(post.id)}
-                                        initialReposted={repostedIds.has(originalId)}
-                                    />
-                                </li>
-                            );
-                        })}
-                    </ul>
-                    {hasMore && (
-                        <div class="load-more-wrapper">
-                            <button class="btn btn-ghost" onClick={onLoadMore} disabled={loadingMore}>
-                                {loadingMore ? 'Cargando...' : 'Cargar más'}
-                            </button>
-                        </div>
-                    )}
-                </>
-            )}
+            {content}
 
             <style>{`
                 .tab-section { min-height: 200px; }

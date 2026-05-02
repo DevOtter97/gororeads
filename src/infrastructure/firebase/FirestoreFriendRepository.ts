@@ -8,7 +8,6 @@ import {
     updateDoc,
     doc,
     serverTimestamp,
-    Timestamp,
     runTransaction,
     writeBatch,
     limit,
@@ -25,12 +24,9 @@ export class FirestoreFriendRepository implements IFriendRepository {
     async searchUsers(searchQuery: string, currentUserId: string): Promise<User[]> {
         if (!searchQuery || searchQuery.length < 2) return [];
 
-        const normalizedQuery = searchQuery.toLowerCase();
-        // Note: Ideally we should store a lowercase 'username_lowercase' field for reliable search.
-        // For now, we'll try a simple range query on 'username'. 
-        // If the database has mixed case, this might be tricky without a dedicated lowercase field.
-        // Assuming usernames are stored or can be searched.
-
+        // Nota: idealmente guardariamos un campo 'username_lowercase' para
+        // hacer prefix search case-insensitive. De momento se hace prefix 
+        // sobre 'username' con el case que envia el usuario.
         const usersRef = collection(db, 'users');
         // Simple prefix search
         const q = query(

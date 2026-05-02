@@ -19,7 +19,7 @@ const SOURCE_LABELS: Record<ExternalSearchResult['source'], string> = {
     openlibrary: 'Open Library',
 };
 
-export default function ExternalSearchModal({ initialQuery, initialCategory, onSelect, onClose }: Props) {
+export default function ExternalSearchModal({ initialQuery, initialCategory, onSelect, onClose }: Readonly<Props>) {
     const [query, setQuery] = useState(initialQuery);
     const [category, setCategory] = useState<ReadingCategory>(
         SEARCHABLE_CATEGORIES.includes(initialCategory) ? initialCategory : 'manga'
@@ -121,13 +121,16 @@ export default function ExternalSearchModal({ initialQuery, initialCategory, onS
                 </form>
 
                 <div class="external-search-body">
-                    {loading && results.length === 0 ? (
+                    {loading && results.length === 0 && (
                         <p class="external-search-status">Buscando...</p>
-                    ) : !searched ? (
+                    )}
+                    {!(loading && results.length === 0) && !searched && (
                         <p class="external-search-status">Escribe un titulo y pulsa Buscar.</p>
-                    ) : results.length === 0 ? (
+                    )}
+                    {!(loading && results.length === 0) && searched && results.length === 0 && (
                         <p class="external-search-status">Sin resultados. Prueba con otras palabras o cambia de categoria.</p>
-                    ) : (
+                    )}
+                    {!(loading && results.length === 0) && searched && results.length > 0 && (
                         <ul class="external-search-results">
                             {results.map(r => (
                                 <li key={r.externalId}>

@@ -7,7 +7,7 @@ interface Props {
     onSuccess?: () => void;
 }
 
-export default function LoginForm({ onSuccess }: Props) {
+export default function LoginForm({ onSuccess }: Readonly<Props>) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -81,7 +81,7 @@ export default function LoginForm({ onSuccess }: Props) {
     return (
         <form onSubmit={handleSubmit}>
             <div class="form-group">
-                <label class="form-label" for="email">Email o Usuario</label>
+                <label class="form-label" htmlFor="email">Email o Usuario</label>
                 <input
                     id="email"
                     type="text"
@@ -95,7 +95,7 @@ export default function LoginForm({ onSuccess }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password">Contraseña</label>
+                <label class="form-label" htmlFor="password">Contraseña</label>
                 <input
                     id="password"
                     type="password"

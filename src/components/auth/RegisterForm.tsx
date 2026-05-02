@@ -7,7 +7,7 @@ interface Props {
     onSuccess?: () => void;
 }
 
-export default function RegisterForm({ onSuccess }: Props) {
+export default function RegisterForm({ onSuccess }: Readonly<Props>) {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -101,7 +101,7 @@ export default function RegisterForm({ onSuccess }: Props) {
     return (
         <form onSubmit={handleSubmit}>
             <div class="form-group">
-                <label class="form-label" for="username">Usuario</label>
+                <label class="form-label" htmlFor="username">Usuario</label>
                 <input
                     id="username"
                     type="text"
@@ -116,7 +116,7 @@ export default function RegisterForm({ onSuccess }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="email">Email</label>
+                <label class="form-label" htmlFor="email">Email</label>
                 <input
                     id="email"
                     type="email"
@@ -130,7 +130,7 @@ export default function RegisterForm({ onSuccess }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password">Contraseña</label>
+                <label class="form-label" htmlFor="password">Contraseña</label>
                 <input
                     id="password"
                     type="password"
@@ -145,7 +145,7 @@ export default function RegisterForm({ onSuccess }: Props) {
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="confirmPassword">Confirmar Contraseña</label>
+                <label class="form-label" htmlFor="confirmPassword">Confirmar Contraseña</label>
                 <input
                     id="confirmPassword"
                     type="password"

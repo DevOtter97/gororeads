@@ -10,7 +10,13 @@ interface Props {
   onToggleFavorite: (id: string, isFavorite: boolean) => void;
 }
 
-export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatusChange, onToggleFavorite }: Props) {
+function formatChapterProgress(measureUnit: Reading['measureUnit'], currentChapter: number): string {
+  if (measureUnit === 'percentage') return `${currentChapter}%`;
+  if (measureUnit === 'pages') return `Pág. ${currentChapter}`;
+  return `Cap. ${currentChapter}`;
+}
+
+export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatusChange, onToggleFavorite }: Readonly<Props>) {
   const handleStatusChange = (e: Event) => {
     e.stopPropagation();
     const newStatus = (e.target as HTMLSelectElement).value as Reading['status'];
@@ -92,11 +98,7 @@ export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatu
 
           {reading.status !== 'to-read' && reading.currentChapter !== undefined && (
             <span class="chapter-info">
-              {reading.measureUnit === 'percentage'
-                ? `${reading.currentChapter}%`
-                : reading.measureUnit === 'pages'
-                  ? `Pág. ${reading.currentChapter}`
-                  : `Cap. ${reading.currentChapter}`}
+              {formatChapterProgress(reading.measureUnit, reading.currentChapter)}
               {reading.measureUnit !== 'percentage' && reading.totalChapters ? ` / ${reading.totalChapters}` : ''}
             </span>
           )}

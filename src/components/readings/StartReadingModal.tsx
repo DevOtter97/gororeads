@@ -8,7 +8,7 @@ interface Props {
     onCancel: () => void;
 }
 
-export default function StartReadingModal({ reading, onConfirm, onCancel }: Props) {
+export default function StartReadingModal({ reading, onConfirm, onCancel }: Readonly<Props>) {
     const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
     const [progress, setProgress] = useState(reading.currentChapter || 0);
     const [measureUnit, setMeasureUnit] = useState<ReadingMeasureUnit>(reading.measureUnit);
@@ -64,8 +64,8 @@ export default function StartReadingModal({ reading, onConfirm, onCancel }: Prop
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Unidad de Progreso</label>
+                        <fieldset className="form-group" style={{ border: 'none', padding: 0, margin: 0 }}>
+                            <legend className="form-label">Unidad de Progreso</legend>
                             <div className="radio-group">
                                 {Object.entries(MEASURE_UNIT_LABELS).map(([value, label]) => (
                                     <label key={value} className={`radio-label ${measureUnit === value ? 'active' : ''}`}>
@@ -81,7 +81,7 @@ export default function StartReadingModal({ reading, onConfirm, onCancel }: Prop
                                     </label>
                                 ))}
                             </div>
-                        </div>
+                        </fieldset>
 
                         <div className="form-group">
                             <label htmlFor="start-progress">

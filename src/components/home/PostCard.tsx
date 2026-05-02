@@ -71,7 +71,7 @@ function PostContent({ source, onImageClick }: {
     );
 }
 
-export default function PostCard({ post, currentUser, initialLiked, initialReposted, onDelete, onReposted, onUnreposted }: Props) {
+export default function PostCard({ post, currentUser, initialLiked, initialReposted, onDelete, onReposted, onUnreposted }: Readonly<Props>) {
     const [lightbox, setLightbox] = useState(false);
     const [commentsExpanded, setCommentsExpanded] = useState(false);
     const [commentsCount, setCommentsCount] = useState(post.commentsCount);

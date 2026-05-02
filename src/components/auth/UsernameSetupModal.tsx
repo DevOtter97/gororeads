@@ -11,7 +11,7 @@ interface Props {
     onComplete: (updatedUser: User) => void;
 }
 
-export default function UsernameSetupModal({ user, onComplete }: Props) {
+export default function UsernameSetupModal({ user, onComplete }: Readonly<Props>) {
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -93,10 +93,11 @@ export default function UsernameSetupModal({ user, onComplete }: Props) {
 
                 <form onSubmit={handleSubmit}>
                     <div class="form-group">
-                        <label class="form-label">
+                        <label class="form-label" htmlFor="setupUsername">
                             Nombre de Usuario
                         </label>
                         <input
+                            id="setupUsername"
                             type="text"
                             value={username}
                             onInput={(e) => {
@@ -125,8 +126,8 @@ export default function UsernameSetupModal({ user, onComplete }: Props) {
                     >
                         {loading ? (
                             <>
-                                <span class="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: 'currentColor' }}></span>
-                                Guardando...
+                                <span class="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: 'currentColor' }} />
+                                {' '}Guardando...
                             </>
                         ) : (
                             'Completar Registro'
