@@ -186,11 +186,13 @@ export default function CommentList({ post, currentUser, onCountChange }: Props)
                     </button>
                 </form>
 
-                {loading ? (
+                {loading && (
                     <p class="comments-status">Cargando comentarios...</p>
-                ) : tree.roots.length === 0 ? (
+                )}
+                {!loading && tree.roots.length === 0 && (
                     <p class="comments-status">Sé el primero en comentar.</p>
-                ) : (
+                )}
+                {!loading && tree.roots.length > 0 && (
                     <ul class="comments-list">
                         {tree.roots.map(root => {
                             const replies = tree.repliesByParent.get(root.id) ?? [];

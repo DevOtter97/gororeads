@@ -135,21 +135,21 @@ export default function HomeFeed() {
 
                     {error && <p class="feed-error">{error}</p>}
 
-                    {posts.length === 0 ? (
-                        hasFriends ? (
-                            <EmptyState
-                                title="Aún no hay nada por aquí"
-                                description="Tus amigos aún no han posteado. ¡Sé el primero!"
-                            />
-                        ) : (
-                            <EmptyState
-                                title="Tu feed está vacío"
-                                description="Aún no tienes amigos que sigan posteando. Encuentra gente para empezar."
-                            >
-                                <a href="/social?tab=search" class="btn btn-primary">Buscar usuarios</a>
-                            </EmptyState>
-                        )
-                    ) : (
+                    {posts.length === 0 && hasFriends && (
+                        <EmptyState
+                            title="Aún no hay nada por aquí"
+                            description="Tus amigos aún no han posteado. ¡Sé el primero!"
+                        />
+                    )}
+                    {posts.length === 0 && !hasFriends && (
+                        <EmptyState
+                            title="Tu feed está vacío"
+                            description="Aún no tienes amigos que sigan posteando. Encuentra gente para empezar."
+                        >
+                            <a href="/social?tab=search" class="btn btn-primary">Buscar usuarios</a>
+                        </EmptyState>
+                    )}
+                    {posts.length > 0 && (
                         <ul class="feed-list">
                             {posts.map(post => {
                                 const originalId = post.repostOf?.postId ?? post.id;

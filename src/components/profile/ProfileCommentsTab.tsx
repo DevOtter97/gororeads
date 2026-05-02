@@ -9,34 +9,39 @@ interface Props {
 }
 
 export default function ProfileCommentsTab({ comments, loading, emptyMessage }: Props) {
+    let content;
+    if (loading) {
+        content = <p class="tab-status">Cargando comentarios...</p>;
+    } else if (comments.length === 0) {
+        content = <p class="tab-status">{emptyMessage}</p>;
+    } else {
+        content = (
+            <ul class="profile-comments-list">
+                {comments.map(c => (
+                    <li key={c.id} class="profile-comment">
+                        <UserAvatar username={c.username} photoUrl={c.photoURL} size={32} />
+                        <div class="profile-comment-body">
+                            <div class="profile-comment-header">
+                                <span class="profile-comment-author">{c.username}</span>
+                                <span class="profile-comment-time">· {timeAgoCompact(c.createdAt)}</span>
+                                {c.parentId && <span class="profile-comment-tag">respuesta</span>}
+                            </div>
+                            <p class="profile-comment-text">{c.text}</p>
+                            {c.postId && (
+                                <a href={`/post/${c.postId}`} class="profile-comment-link">
+                                    Ver post →
+                                </a>
+                            )}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        );
+    }
+
     return (
         <section class="tab-section">
-            {loading ? (
-                <p class="tab-status">Cargando comentarios...</p>
-            ) : comments.length === 0 ? (
-                <p class="tab-status">{emptyMessage}</p>
-            ) : (
-                <ul class="profile-comments-list">
-                    {comments.map(c => (
-                        <li key={c.id} class="profile-comment">
-                            <UserAvatar username={c.username} photoUrl={c.photoURL} size={32} />
-                            <div class="profile-comment-body">
-                                <div class="profile-comment-header">
-                                    <span class="profile-comment-author">{c.username}</span>
-                                    <span class="profile-comment-time">· {timeAgoCompact(c.createdAt)}</span>
-                                    {c.parentId && <span class="profile-comment-tag">respuesta</span>}
-                                </div>
-                                <p class="profile-comment-text">{c.text}</p>
-                                {c.postId && (
-                                    <a href={`/post/${c.postId}`} class="profile-comment-link">
-                                        Ver post →
-                                    </a>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            {content}
 
             <style>{`
                 .tab-section { min-height: 200px; }

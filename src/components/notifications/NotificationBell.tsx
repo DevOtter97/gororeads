@@ -90,15 +90,17 @@ export default function NotificationBell({ userId }: Props) {
                     </div>
 
                     <div class="notification-dropdown-body">
-                        {loading ? (
+                        {loading && (
                             <div class="notification-loading">
                                 <div class="spinner"></div>
                             </div>
-                        ) : notifications.length === 0 ? (
+                        )}
+                        {!loading && notifications.length === 0 && (
                             <div class="notification-empty">
                                 No tienes notificaciones
                             </div>
-                        ) : (
+                        )}
+                        {!loading && notifications.length > 0 && (
                             notifications.map(n => (
                                 <div
                                     key={n.id}

@@ -72,15 +72,17 @@ export default function ReadingPickerModal({ userId, onSelect, onClose }: Props)
                     />
                 </div>
                 <div class="picker-body">
-                    {loading ? (
+                    {loading && (
                         <LoadingState message="Cargando lecturas..." fullScreen={false} />
-                    ) : filtered.length === 0 ? (
+                    )}
+                    {!loading && filtered.length === 0 && (
                         <p class="picker-empty">
                             {readings.length === 0
                                 ? 'Aún no tienes lecturas. Añade alguna en el Dashboard.'
                                 : 'Ninguna lectura coincide con la busqueda.'}
                         </p>
-                    ) : (
+                    )}
+                    {!loading && filtered.length > 0 && (
                         <ul class="picker-list">
                             {filtered.map(r => (
                                 <li key={r.id}>

@@ -7,6 +7,14 @@ interface Props {
   onEdit: (reading: Reading) => void;
 }
 
+function computeProgressWidth(reading: Reading): string {
+  if (reading.status === 'completed') return '100%';
+  if (reading.measureUnit === 'percentage') {
+    return `${Math.min(100, reading.currentChapter || 0)}%`;
+  }
+  return `${Math.min(100, ((reading.currentChapter || 0) / (reading.totalChapters || 1)) * 100)}%`;
+}
+
 export default function ReadingDetailsModal({ reading, onClose, onEdit }: Props) {
   const formatDate = (date?: Date) => {
     if (!date) return 'No definida';
@@ -113,20 +121,17 @@ export default function ReadingDetailsModal({ reading, onClose, onEdit }: Props)
                     {MEASURE_UNIT_LABELS[reading.measureUnit]}
                   </span>
                 </div>
-                {(reading.status === 'completed' || reading.measureUnit === 'percentage' || (reading.measureUnit === 'pages' && reading.totalChapters)) && (
-                  <div className="progress-bar-container">
-                    <div
-                      className="progress-bar-fill"
-                      style={{
-                        width: reading.status === 'completed'
-                          ? '100%'
-                          : reading.measureUnit === 'percentage'
-                            ? `${Math.min(100, reading.currentChapter || 0)}%`
-                            : `${Math.min(100, ((reading.currentChapter || 0) / (reading.totalChapters || 1)) * 100)}%`
-                      }}
-                    ></div>
-                  </div>
-                )}
+                {(reading.status === 'completed' || reading.measureUnit === 'percentage' || (reading.measureUnit === 'pages' && reading.totalChapters)) && (() => {
+                  const progressWidth = computeProgressWidth(reading);
+                  return (
+                    <div className="progress-bar-container">
+                      <div
+                        className="progress-bar-fill"
+                        style={{ width: progressWidth }}
+                      ></div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
