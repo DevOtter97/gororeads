@@ -166,7 +166,19 @@ export default function UserProfile() {
                 ) : profile ? (
                     <>
                     <div class="profile-card">
-                        <div class="avatar-section" onClick={handleAvatarClick}>
+                        <div
+                            class="avatar-section"
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Cambiar foto de perfil"
+                            onClick={handleAvatarClick}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleAvatarClick();
+                                }
+                            }}
+                        >
                             {avatarSrc ? (
                                 <img class="avatar-img" src={avatarSrc} alt="Avatar" />
                             ) : (

@@ -18,7 +18,18 @@ export default function ReadingCard({ reading, onView, onEdit, onDelete, onStatu
   };
 
   return (
-    <div class="card reading-card" onClick={() => onView(reading)}>
+    <div
+      class="card reading-card"
+      role="button"
+      tabIndex={0}
+      onClick={() => onView(reading)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onView(reading);
+        }
+      }}
+    >
       <div class="reading-card-image">
         {reading.imageUrl ? (
           <img src={reading.imageUrl} alt={reading.title} loading="lazy" />

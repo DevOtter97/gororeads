@@ -169,13 +169,20 @@ export default function PostCard({ post, currentUser, initialLiked, initialRepos
             {lightbox && (() => {
                 const src = isRepost && post.repostOf?.imageUrl ? post.repostOf.imageUrl : post.imageUrl;
                 return src ? (
-                    <div class="lightbox" onClick={() => setLightbox(false)}>
+                    <div
+                        class="lightbox"
+                        role="button"
+                        tabIndex={-1}
+                        aria-label="Cerrar imagen"
+                        onClick={(e) => { if (e.target === e.currentTarget) setLightbox(false); }}
+                        onKeyDown={(e) => { if (e.key === 'Escape') setLightbox(false); }}
+                    >
                         <button class="lightbox-close" onClick={() => setLightbox(false)} aria-label="Cerrar">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                         </button>
-                        <img class="lightbox-image" src={src} alt="" onClick={(e) => e.stopPropagation()} />
+                        <img class="lightbox-image" src={src} alt="" />
                     </div>
                 ) : null;
             })()}

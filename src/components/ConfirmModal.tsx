@@ -49,8 +49,21 @@ export default function ConfirmModal({
     const confirmClass = variant === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
 
     return (
-        <div class="modal-overlay" onClick={() => !loading && onCancel()}>
-            <div class="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+            class="modal-overlay"
+            role="button"
+            tabIndex={-1}
+            aria-label="Cerrar dialogo"
+            onClick={() => !loading && onCancel()}
+            onKeyDown={(e) => { if (e.key === 'Escape' && !loading) onCancel(); }}
+        >
+            <div
+                class="modal confirm-modal"
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
                 <div class="confirm-modal-body">
                     <h3 class="confirm-modal-title">{title}</h3>
                     <p class="confirm-modal-text">{message}</p>

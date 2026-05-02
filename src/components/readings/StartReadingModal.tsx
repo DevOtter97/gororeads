@@ -23,12 +23,19 @@ export default function StartReadingModal({ reading, onConfirm, onCancel }: Prop
     };
 
     return (
-        <div className="modal-overlay" onClick={(e) => {
-            if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
-                onCancel();
-            }
-        }}>
-            <div className="modal" style="max-width: 400px;">
+        <div
+            className="modal-overlay"
+            role="button"
+            tabIndex={-1}
+            aria-label="Cerrar dialogo"
+            onClick={(e) => {
+                if ((e.target as HTMLElement).classList.contains('modal-overlay')) {
+                    onCancel();
+                }
+            }}
+            onKeyDown={(e) => { if (e.key === 'Escape') onCancel(); }}
+        >
+            <div className="modal" role="dialog" aria-modal="true" style="max-width: 400px;">
                 <div className="modal-header">
                     <h2 className="modal-title">Empezar Lectura</h2>
                     <button className="modal-close" onClick={onCancel}>
