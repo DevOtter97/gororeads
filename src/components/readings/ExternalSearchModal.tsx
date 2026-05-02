@@ -19,7 +19,7 @@ const SOURCE_LABELS: Record<ExternalSearchResult['source'], string> = {
     openlibrary: 'Open Library',
 };
 
-export default function ExternalSearchModal({ initialQuery, initialCategory, onSelect, onClose }: Props) {
+export default function ExternalSearchModal({ initialQuery, initialCategory, onSelect, onClose }: Readonly<Props>) {
     const [query, setQuery] = useState(initialQuery);
     const [category, setCategory] = useState<ReadingCategory>(
         SEARCHABLE_CATEGORIES.includes(initialCategory) ? initialCategory : 'manga'

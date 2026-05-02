@@ -10,7 +10,7 @@ interface Props {
     onClose: () => void;
 }
 
-export default function ReadingPickerModal({ userId, onSelect, onClose }: Props) {
+export default function ReadingPickerModal({ userId, onSelect, onClose }: Readonly<Props>) {
     const [readings, setReadings] = useState<Reading[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');

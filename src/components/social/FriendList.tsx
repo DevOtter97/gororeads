@@ -11,7 +11,7 @@ interface Props {
     onSwitchToSearch?: () => void;
 }
 
-export default function FriendList({ userId, onSwitchToSearch }: Props) {
+export default function FriendList({ userId, onSwitchToSearch }: Readonly<Props>) {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
     const [removeConfirm, setRemoveConfirm] = useState<Friend | null>(null);

@@ -20,7 +20,7 @@ const formatDateInput = (date: Date | string | undefined, fallback = ''): string
 
 const todayDateInput = (): string => new Date().toISOString().split('T')[0];
 
-export default function ReadingForm({ reading, onSubmit, onCancel }: Props) {
+export default function ReadingForm({ reading, onSubmit, onCancel }: Readonly<Props>) {
     const [title, setTitle] = useState(reading?.title || '');
     const [imageUrl, setImageUrl] = useState(reading?.imageUrl || '');
     const [category, setCategory] = useState<ReadingCategory>(reading?.category || 'manga');

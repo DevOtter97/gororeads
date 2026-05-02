@@ -20,7 +20,7 @@ interface Props {
  * Tras un borrado exitoso, redirigimos a /. El listener onAuthStateChanged
  * tambien emitira null, asi que la app limpia su estado sola.
  */
-export default function DeleteAccountSection({ currentUsername }: Props) {
+export default function DeleteAccountSection({ currentUsername }: Readonly<Props>) {
     const [confirmText, setConfirmText] = useState('');
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);

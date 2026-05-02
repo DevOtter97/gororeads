@@ -11,7 +11,7 @@ interface Props {
     onComplete: (updatedUser: User) => void;
 }
 
-export default function UsernameSetupModal({ user, onComplete }: Props) {
+export default function UsernameSetupModal({ user, onComplete }: Readonly<Props>) {
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');

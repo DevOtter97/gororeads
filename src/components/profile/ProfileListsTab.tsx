@@ -7,7 +7,7 @@ interface Props {
     emptyMessage: string;
 }
 
-export default function ProfileListsTab({ lists, loading, emptyMessage }: Props) {
+export default function ProfileListsTab({ lists, loading, emptyMessage }: Readonly<Props>) {
     return (
         <section id="lists" class="tab-section">
             {loading ? (

@@ -9,7 +9,7 @@ interface Props {
     userId: string;
 }
 
-export default function NotificationBell({ userId }: Props) {
+export default function NotificationBell({ userId }: Readonly<Props>) {
     const [unreadCount, setUnreadCount] = useState(0);
     const { open: isOpen, setOpen: setIsOpen, wrapperRef: dropdownRef } = useDropdown<HTMLDivElement>();
     const [notifications, setNotifications] = useState<Notification[]>([]);

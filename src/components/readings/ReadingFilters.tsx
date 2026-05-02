@@ -29,7 +29,7 @@ export default function ReadingFilters({
   onSearchChange,
   onFavoritesToggle,
   onClearFilters,
-}: Props) {
+}: Readonly<Props>) {
   const hasActiveFilters = currentStatus !== 'all' || currentCategory !== 'all' || selectedTags.length > 0 || searchQuery || showFavoritesOnly;
 
   return (

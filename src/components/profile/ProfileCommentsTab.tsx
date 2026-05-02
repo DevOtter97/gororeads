@@ -8,7 +8,7 @@ interface Props {
     emptyMessage: string;
 }
 
-export default function ProfileCommentsTab({ comments, loading, emptyMessage }: Props) {
+export default function ProfileCommentsTab({ comments, loading, emptyMessage }: Readonly<Props>) {
     return (
         <section class="tab-section">
             {loading ? (

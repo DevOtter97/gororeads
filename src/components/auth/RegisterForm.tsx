@@ -7,7 +7,7 @@ interface Props {
     onSuccess?: () => void;
 }
 
-export default function RegisterForm({ onSuccess }: Props) {
+export default function RegisterForm({ onSuccess }: Readonly<Props>) {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

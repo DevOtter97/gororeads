@@ -19,7 +19,7 @@ const getInitials = (title: string): string => {
         .join('');
 };
 
-export default function CustomListCard({ list, readings, onEdit, onDelete, onView }: Props) {
+export default function CustomListCard({ list, readings, onEdit, onDelete, onView }: Readonly<Props>) {
     const getVisibilityIcon = () => {
         switch (list.visibility) {
             case 'private':

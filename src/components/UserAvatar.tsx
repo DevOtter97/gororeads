@@ -4,7 +4,7 @@ interface UserAvatarProps {
     size?: number;
 }
 
-export default function UserAvatar({ username, photoUrl, size = 48 }: UserAvatarProps) {
+export default function UserAvatar({ username, photoUrl, size = 48 }: Readonly<UserAvatarProps>) {
     const initial = username.charAt(0).toUpperCase();
     return (
         <>

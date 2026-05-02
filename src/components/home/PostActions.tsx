@@ -51,7 +51,7 @@ export default function PostActions({
     commentsExpanded,
     onReposted,
     onUnreposted,
-}: Props) {
+}: Readonly<Props>) {
     const original = resolveOriginal(post);
 
     const [liked, setLiked] = useState(initialLiked);

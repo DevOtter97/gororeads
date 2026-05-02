@@ -13,7 +13,7 @@ interface Props {
     slug: string;
 }
 
-export default function PublicListView({ slug }: Props) {
+export default function PublicListView({ slug }: Readonly<Props>) {
     // Pagina publica: viewable sin sesion. NO redirige.
     const { user, authResolved } = useAuth();
     const [list, setList] = useState<CustomList | null>(null);
