@@ -175,7 +175,7 @@ export class FirestoreReadingRepository implements IReadingRepository {
             reading.tags.forEach((tag) => tagsSet.add(tag));
         });
 
-        return Array.from(tagsSet).sort();
+        return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
     }
 }
 
