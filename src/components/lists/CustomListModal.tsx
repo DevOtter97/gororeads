@@ -77,6 +77,7 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
             });
             onClose();
         } catch (err) {
+            console.error('Error saving custom list:', err);
             setError('Error al guardar la lista');
         } finally {
             setLoading(false);
@@ -160,8 +161,8 @@ export default function CustomListModal({ list, user, onSubmit, onClose }: Props
                         <div className="readings-selector">
                             {loadingReadings ? (
                                 <div className="readings-loading">
-                                    <span className="spinner"></span>
-                                    Cargando lecturas...
+                                    <span className="spinner" />
+                                    {' '}Cargando lecturas...
                                 </div>
                             ) : userReadings.length === 0 ? (
                                 <div className="readings-empty">

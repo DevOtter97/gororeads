@@ -139,7 +139,6 @@ export default function ImageCropperModal({ imageSrc, onCancel, onCrop }: Props)
 
     const handleImageLoad = () => {
         const calculatedMin = calculateMinZoom();
-        //console.log("Image loaded. Min zoom:", calculatedMin);
         setMinZoom(calculatedMin);
         setZoom(calculatedMin);
         setOffset({ x: 0, y: 0 });

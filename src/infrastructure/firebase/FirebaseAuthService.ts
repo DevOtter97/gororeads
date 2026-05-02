@@ -5,7 +5,6 @@ import {
     onAuthStateChanged as firebaseOnAuthStateChanged,
     type User as FirebaseUser,
     GoogleAuthProvider,
-    OAuthProvider,
     signInWithPopup,
     EmailAuthProvider,
     reauthenticateWithCredential,
@@ -139,7 +138,7 @@ export class FirebaseAuthService implements IAuthService {
 
     async reauthenticate(currentPassword: string): Promise<void> {
         const firebaseUser = auth.currentUser;
-        if (!firebaseUser || !firebaseUser.email) {
+        if (!firebaseUser?.email) {
             throw new Error('No hay sesión activa');
         }
         const credential = EmailAuthProvider.credential(firebaseUser.email, currentPassword);
@@ -209,7 +208,7 @@ export class FirebaseAuthService implements IAuthService {
 
     async deleteAccount(currentPassword: string): Promise<void> {
         const firebaseUser = auth.currentUser;
-        if (!firebaseUser || !firebaseUser.email) {
+        if (!firebaseUser?.email) {
             throw new Error('No hay sesión activa');
         }
 

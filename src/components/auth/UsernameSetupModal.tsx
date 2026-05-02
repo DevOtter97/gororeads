@@ -125,8 +125,8 @@ export default function UsernameSetupModal({ user, onComplete }: Props) {
                     >
                         {loading ? (
                             <>
-                                <span class="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: 'currentColor' }}></span>
-                                Guardando...
+                                <span class="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: 'currentColor' }} />
+                                {' '}Guardando...
                             </>
                         ) : (
                             'Completar Registro'
